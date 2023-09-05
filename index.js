@@ -36,11 +36,11 @@ function checkApi() {
     .multiData({ assets: "bitcoin,litecoin,ethereum,tether,dogecoin" })
     .then(async (response) => {
       const cryptocurrencies = response.data.data;
-      const records = [];
+      const cryptoLogs = [];
 
       for (const [name, cryptoData] of Object.entries(cryptocurrencies)) {
         const record = {
-          name: name,
+          name,
           market_cap: cryptoData.market_cap,
           liquidity: cryptoData.liquidity,
           price: cryptoData.price,
@@ -51,7 +51,7 @@ function checkApi() {
           updated_at: new Date().toISOString(),
         };
 
-        records.push(record);
+        cryptoLogs.push(record);
       }
 
       try {
@@ -65,8 +65,15 @@ function checkApi() {
         } else {
           console.log("Upsert successful:", data);
         }
+
+        await supabase
+          .from("crypto_logs")
+          .insert(cryptoLogs)
+          .execute();
+
+        console.log("Data inserted into crypto_logs table");
       } catch (error) {
-        console.error("Error upserting:", error);
+        console.error("Error inserting data into crypto_logs table:", error);
       }
     })
     .catch((err) => console.error(err));
