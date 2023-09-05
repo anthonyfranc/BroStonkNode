@@ -61,7 +61,7 @@ function checkApi() {
             .from("crypto_logs")
             .select("*")
             .eq("name", record.name)
-            .order("last_updated", { ascending: false })
+            .order("updated_at", { ascending: false })
             .limit(1)
             .single();
 
