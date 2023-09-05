@@ -68,7 +68,7 @@ function checkApi() {
         }
 
         // Insert the same data into the "crypto_logs" table
-        const logResult = await supabase.from("crypto_logs").insert(records);
+        const logResult = await supabase.from("crypto_logs").upsert(records);
 
         if (logResult.error) {
           console.error("Error upserting into crypto_logs:", logResult.error);
