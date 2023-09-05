@@ -61,7 +61,7 @@ function checkApi() {
             .from("crypto_logs")
             .select("*")
             .eq("name", record.name)
-            .order("updated_at", { ascending: false })
+            .order("last_updated", { ascending: false })
             .limit(1)
             .single();
 
@@ -76,7 +76,19 @@ function checkApi() {
               console.log("Upsert successful into crypto_logs:", logResult.data);
             }
           } else {
-            console.log(`No changes for ${record.name}.`);
+            console.log(`No changes for ${record.name} in crypto_logs.`);
+          }
+
+          // Insert the data into the "crypto" table regardless of changes
+          const cryptoResult = await supabase
+            .from("crypto")
+            .upsert([record], { onConflict: ["name"] })
+            .select();
+
+          if (cryptoResult.error) {
+            console.error("Error upserting into crypto:", cryptoResult.error);
+          } else {
+            console.log("Upsert successful into crypto:", cryptoResult.data);
           }
         }
       } catch (error) {
