@@ -55,25 +55,29 @@ function checkApi() {
       }
 
       try {
-        // Insert data into the "crypto" table
-        const cryptoResult = await supabase
-          .from("crypto")
-          .upsert(records, { onConflict: ["name"] })
-          .select();
+        for (const record of records) {
+          // Query the most recent record for the cryptocurrency based on the "last_updated" column
+          const recentRecord = await supabase
+            .from("crypto_logs")
+            .select("*")
+            .eq("name", record.name)
+            .order("last_updated", { ascending: false })
+            .limit(1)
+            .single();
 
-        if (cryptoResult.error) {
-          console.error("Error upserting into crypto:", cryptoResult.error);
-        } else {
-          console.log("Upsert successful into crypto:", cryptoResult.data);
-        }
+          // Compare the new data with the most recent record
+          if (!recentRecord || recentRecord.data === null || JSON.stringify(recentRecord.data) !== JSON.stringify(record)) {
+            // Insert the changed data into the "crypto_logs" table
+            const logResult = await supabase.from("crypto_logs").upsert([record]);
 
-        // Insert the same data into the "crypto_logs" table
-        const logResult = await supabase.from("crypto_logs").upsert(records);
-
-        if (logResult.error) {
-          console.error("Error upserting into crypto_logs:", logResult.error);
-        } else {
-          console.log("Upsert successful into crypto_logs:", logResult.data);
+            if (logResult.error) {
+              console.error("Error upserting into crypto_logs:", logResult.error);
+            } else {
+              console.log("Upsert successful into crypto_logs:", logResult.data);
+            }
+          } else {
+            console.log(`No changes for ${record.name}.`);
+          }
         }
       } catch (error) {
         console.error("Error upserting:", error);
