@@ -37,7 +37,6 @@ function checkApi() {
     .then(async (response) => {
       const cryptocurrencies = response.data.data;
       const records = [];
-      const logs = []; // Create an array to store data for crypto_logs table
 
       for (const [name, cryptoData] of Object.entries(cryptocurrencies)) {
         const record = {
@@ -52,35 +51,29 @@ function checkApi() {
           updated_at: new Date().toISOString(),
         };
 
-        const logEntry = { // Create a log entry for crypto_logs
-          crypto_name: name,
-          log_message: `Data for ${name} inserted into crypto table.`,
-          log_timestamp: new Date().toISOString(),
-        };
-
         records.push(record);
-        logs.push(logEntry); // Push the log entry to the logs array
       }
 
       try {
-        const { data, error } = await supabase
+        // Insert data into the "crypto" table
+        const cryptoResult = await supabase
           .from("crypto")
           .upsert(records, { onConflict: ["name"] })
           .select();
 
-        if (error) {
-          console.error("Error upserting into crypto:", error);
+        if (cryptoResult.error) {
+          console.error("Error upserting into crypto:", cryptoResult.error);
         } else {
-          console.log("Upsert successful into crypto:", data);
+          console.log("Upsert successful into crypto:", cryptoResult.data);
         }
 
-        // Insert logs into crypto_logs table without upserting
-        const logResult = await supabase.from("crypto_logs").insert(logs);
+        // Insert the same data into the "crypto_logs" table
+        const logResult = await supabase.from("crypto_logs").upsert(records);
 
         if (logResult.error) {
-          console.error("Error inserting into crypto_logs:", logResult.error);
+          console.error("Error upserting into crypto_logs:", logResult.error);
         } else {
-          console.log("Insert successful into crypto_logs.");
+          console.log("Upsert successful into crypto_logs:", logResult.data);
         }
       } catch (error) {
         console.error("Error upserting:", error);
