@@ -55,34 +55,31 @@ function checkApi() {
       }
 
       try {
-        const processedCryptos = new Set(); // To track processed cryptocurrencies
-
         for (const record of records) {
-          if (!processedCryptos.has(record.name)) {
-            // Query the most recent record for the cryptocurrency based on the "last_updated" column
-            const recentRecord = await supabase
-              .from("crypto_logs")
-              .select("*")
-              .eq("name", record.name)
-              .order("last_updated", { ascending: false })
-              .limit(1)
-              .single();
+          // Query the most recent "price" for the cryptocurrency based on the "last_updated" column
+          const recentPriceRecord = await supabase
+            .from("crypto_logs")
+            .select("price")
+            .eq("name", record.name)
+            .order("last_updated", { ascending: false })
+            .limit(1)
+            .single();
 
-            // Compare the new data with the most recent record
-            if (!recentRecord || recentRecord.data === null || JSON.stringify(recentRecord.data) !== JSON.stringify(record)) {
-              // Insert the changed data into the "crypto_logs" table
-              const logResult = await supabase.from("crypto_logs").upsert([record]);
+          if (
+            !recentPriceRecord || // If there's no recent record
+            recentPriceRecord.data === null || // If the recent record has no data
+            recentPriceRecord.data.price !== record.price // If the new price is different from the recent price
+          ) {
+            // Insert the data into the "crypto_logs" table
+            const logResult = await supabase.from("crypto_logs").upsert([record]);
 
-              if (logResult.error) {
-                console.error("Error upserting into crypto_logs:", logResult.error);
-              } else {
-                console.log("Upsert successful into crypto_logs:", logResult.data);
-              }
+            if (logResult.error) {
+              console.error("Error upserting into crypto_logs:", logResult.error);
             } else {
-              console.log(`No changes for ${record.name} in crypto_logs.`);
+              console.log("Upsert successful into crypto_logs:", logResult.data);
             }
-
-            processedCryptos.add(record.name); // Mark cryptocurrency as processed
+          } else {
+            console.log(`No price change for ${record.name} in crypto_logs.`);
           }
 
           // Insert the data into the "crypto" table regardless of changes
