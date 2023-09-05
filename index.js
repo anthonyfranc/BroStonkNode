@@ -69,7 +69,7 @@ function checkApi() {
         await supabase
           .from("crypto_logs")
           .insert(cryptoLogs)
-          .execute();
+          .select();
 
         console.log("Data inserted into crypto_logs table");
       } catch (error) {
