@@ -56,12 +56,12 @@ function checkApi() {
 
       try {
         for (const record of records) {
-          // Query the most recent "price" for the cryptocurrency based on the "last_updated" column
+          // Query the most recent "price" for the cryptocurrency based on the "id" column
           const recentPriceRecord = await supabase
             .from("crypto_logs")
             .select("price")
             .eq("name", record.name)
-            .order("last_updated", { ascending: false })
+            .order("id", { ascending: false }) // Order by 'id' in descending order
             .limit(1)
             .single();
 
