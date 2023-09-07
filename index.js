@@ -33,7 +33,7 @@ function stopCheckApiInterval() {
 
 function checkApi() {
   sdk
-    .multiData({ assets: "bitcoin,litecoin,ethereum,tether,dogecoin,xrp,bnb" })
+    .multiData({ assets: "bitcoin,litecoin,ethereum,tether,dogecoin,xrp,bnb,polygon,solana" })
     .then(async (response) => {
       const cryptocurrencies = response.data.data;
       const records = [];
