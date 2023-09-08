@@ -1,7 +1,7 @@
 const http = require('http');
 const WebSocket = require('ws');
 const server = http.createServer();
-const wss = new WebSocket.Server({server, path: '/index-ws' });
+const wss = new WebSocket.Server({ server, path: '/index-ws' });
 
 const { createClient } = require("@supabase/supabase-js");
 
@@ -9,8 +9,13 @@ const supabaseUrl = "https://jjtqvxvprcmblezstaks.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqdHF2eHZwcmNtYmxlenN0YWtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTE3NjAxMjAsImV4cCI6MjAwNzMzNjEyMH0.glxbp12RNVsu6TaSqPGH_CUDs9AH7T1jNkfwLtz3ZQI";
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-const sdk = require("api")("@mobula-api/v1.0#4cpc4om4lkxxs6mc");
-sdk.auth("227cbd70-db72-4532-a285-bfaf74481af5"); // Set the authorization header using the auth method
+const apiToken = "227cbd70-db72-4532-a285-bfaf74481af5";
+const marketData = require("api")("@mobula-api/v1.0#4cpc4om4lkxxs6mc");
+const tradeHistory = require("api")("@mobula-api/v1.0#1y6qv6aclmauztal");
+
+marketData.auth(apiToken);
+tradeHistory.auth(apiToken);
+
 
 let isWebSocketActive = false; // Flag to track WebSocket activity
 let interval;
@@ -43,8 +48,8 @@ function stopNoConnectionInterval() {
   clearInterval(noConnectionInterval);
 }
 
-function checkApi() {
-  sdk
+async function checkApi() {
+  marketData
     .multiData({ assets: "bitcoin,litecoin,ethereum,tether,dogecoin,xrp,bnb,polygon,solana" })
     .then(async (response) => {
       const cryptocurrencies = response.data.data;
@@ -104,6 +109,22 @@ function checkApi() {
             console.error("Error upserting into crypto:", cryptoResult.error);
           } else {
             console.log("Upsert successful into crypto:", cryptoResult.data);
+          }
+          // Make the second API call for each asset name
+          const tradeData = await tradeHistory.getTradeHistory({ asset: record.name, maxResults: '30' });
+
+          // Modify the tradeData object to include the 'asset' column
+          tradeData.data.data.forEach((trade) => {
+            trade.asset = record.name;
+          });
+
+          // Insert the trade data into the "trades" table in Supabase
+          const tradeInsertResult = await supabase.from("trades").upsert(tradeData.data.data);
+
+          if (tradeInsertResult.error) {
+            console.error("Error upserting into trades:", tradeInsertResult.error);
+          } else {
+            console.log("Upsert successful into trades:", tradeInsertResult.data);
           }
         }
       } catch (error) {
