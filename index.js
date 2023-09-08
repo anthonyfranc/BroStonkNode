@@ -131,14 +131,14 @@ wss.on('connection', (ws) => {
     }
   });
 
-  ws.on('close', () => {
-    connections.delete(ws); // Remove the closed connection from the set
+wss.on('close', () => {
+  connections.delete(ws); // Remove the closed connection from the set
 
-    // Check if there are still other active connections
-    if (connections.size === 0) {
-      startNoConnectionInterval(); // Start the no connection interval when there are no active connections
-    }
-  });
+  // Check if there are still other active connections
+  if (connections.size === 0) {
+    isWebSocketActive = false; // Set WebSocket as inactive
+    startNoConnectionInterval(); // Start the no connection interval when there are no active connections
+  }
 });
 
 
