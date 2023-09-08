@@ -111,7 +111,7 @@ async function checkApi() {
             console.log("Upsert successful into crypto:", cryptoResult.data);
           }
           // Make the second API call for each asset name
-          const tradeData = await tradeHistory.getTradeHistory({ asset: record.name, maxResults: '5' });
+          const tradeData = await tradeHistory.getTradeHistory({ asset: record.name, maxResults: '1' });
 
           // Modify the tradeData object to include the 'asset' column
           tradeData.data.data.forEach((trade) => {
