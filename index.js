@@ -14,11 +14,12 @@ sdk.auth("227cbd70-db72-4532-a285-bfaf74481af5"); // Set the authorization heade
 
 let isWebSocketActive = false; // Flag to track WebSocket activity
 let interval;
+let noConnectionInterval;
 
 function startCheckApiInterval() {
   if (!isWebSocketActive) {
     // Start the interval to run checkApi() every 10 seconds
-    interval = setInterval(checkApi, 1000);
+    interval = setInterval(checkApi, 10000); // Change to 10 seconds
     isWebSocketActive = true;
   }
 }
@@ -27,8 +28,19 @@ function stopCheckApiInterval() {
   if (isWebSocketActive) {
     // Stop the interval
     clearInterval(interval);
-    isWebSocketActive = false; 
+    isWebSocketActive = false;
   }
+}
+
+// Function to run checkApi() every 10 minutes when there are no active connections
+function startNoConnectionInterval() {
+  if (connections.size === 0) {
+    noConnectionInterval = setInterval(checkApi, 600000); // 10 minutes interval
+  }
+}
+
+function stopNoConnectionInterval() {
+  clearInterval(noConnectionInterval);
 }
 
 function checkApi() {
@@ -106,7 +118,8 @@ wss.on('connection', (ws) => {
   ws.on('message', (message) => {
     const messageText = message.toString();
     if (messageText === 'startFetching') {
-      startCheckApiInterval();
+      startCheckApiInterval(); // Start the interval only for the first connection
+      stopNoConnectionInterval(); // Stop the no connection interval when there is an active connection
     } else if (messageText.startsWith('ping:')) {
       const originalPingTimestamp = messageText.split(':')[1];
       const pongTimestamp = new Date().getTime();
@@ -116,11 +129,8 @@ wss.on('connection', (ws) => {
 
   ws.on('close', () => {
     stopCheckApiInterval(); // Stop the interval when the WebSocket connection is closed
+    startNoConnectionInterval(); // Start the no connection interval when there are no active connections
   });
-
-  ws.onerror = (error) => {
-    console.error('WebSocket error:', error);
-  };
 });
 
 
