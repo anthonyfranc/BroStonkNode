@@ -35,7 +35,7 @@ function stopCheckApiInterval() {
 // Function to run checkApi() every 10 minutes when there are no active connections
 function startNoConnectionInterval() {
   if (!isWebSocketActive) {
-    noConnectionInterval = setInterval(checkApi, 60000); // 10 minutes interval
+    noConnectionInterval = setInterval(checkApi, 6000); // 10 minutes interval
   }
 }
 
@@ -115,6 +115,8 @@ function checkApi() {
 
 
 const connections = new Set(); // Set to track WebSocket connections
+
+startNoConnectionInterval(); //will run once when the server starts, and it will start the interval if there are no initial connections. It will also continue to work as expected when connections are established and closed.
 
 wss.on('connection', (ws) => {
   connections.add(ws); // Add the new connection to the set
