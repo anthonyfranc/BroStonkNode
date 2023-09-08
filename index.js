@@ -35,7 +35,7 @@ function stopCheckApiInterval() {
 // Function to run checkApi() every 10 minutes when there are no active connections
 function startNoConnectionInterval() {
   if (!isWebSocketActive) {
-    noConnectionInterval = setInterval(checkApi, 600000); // 10 minutes interval
+    noConnectionInterval = setInterval(checkApi, 60000); // 10 minutes interval
   }
 }
 
