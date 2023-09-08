@@ -114,7 +114,11 @@ function checkApi() {
 }
 
 
+const connections = new Set(); // Set to track WebSocket connections
+
 wss.on('connection', (ws) => {
+  connections.add(ws); // Add the new connection to the set
+
   ws.on('message', (message) => {
     const messageText = message.toString();
     if (messageText === 'startFetching') {
@@ -129,6 +133,7 @@ wss.on('connection', (ws) => {
 
   ws.on('close', () => {
     stopCheckApiInterval(); // Stop the interval when the WebSocket connection is closed
+    connections.delete(ws); // Remove the closed connection from the set
     startNoConnectionInterval(); // Start the no connection interval when there are no active connections
   });
 });
