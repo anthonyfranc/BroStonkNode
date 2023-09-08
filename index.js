@@ -133,10 +133,11 @@ wss.on('connection', (ws) => {
 
   ws.on('close', () => {
     connections.delete(ws); // Remove the closed connection from the set
+
+    // Check if there are still other active connections
     if (connections.size === 0) {
       startNoConnectionInterval(); // Start the no connection interval when there are no active connections
     }
-    stopCheckApiInterval(); // Stop the interval when a WebSocket connection is closed
   });
 });
 
