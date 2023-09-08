@@ -40,7 +40,7 @@ function stopCheckApiInterval() {
 // Function to run checkApi() every 60 seconds when there are no active connections
 function startNoConnectionInterval() {
   if (!isWebSocketActive && !noConnectionInterval) {
-    noConnectionInterval = setInterval(checkApi, 60000); // 60 second interval
+    noConnectionInterval = setInterval(checkApi, 15000); // 60 second interval
   }
 }
 
@@ -111,7 +111,7 @@ async function checkApi() {
             console.log("Upsert successful into crypto:", cryptoResult.data);
           }
           // Make the second API call for each asset name
-          const tradeData = await tradeHistory.getTradeHistory({ asset: record.name, maxResults: '30' });
+          const tradeData = await tradeHistory.getTradeHistory({ asset: record.name, maxResults: '5' });
 
           // Modify the tradeData object to include the 'asset' column
           tradeData.data.data.forEach((trade) => {
@@ -119,12 +119,17 @@ async function checkApi() {
           });
 
           // Insert the trade data into the "trades" table in Supabase
-          const tradeInsertResult = await supabase.from("trades").upsert(tradeData.data.data);
-
-          if (tradeInsertResult.error) {
-            console.error("Error upserting into trades:", tradeInsertResult.error);
-          } else {
+          try {
+            const tradeInsertResult = await supabase
+              .from("trades")
+              .upsert(tradeData.data.data);
             console.log("Upsert successful into trades:", tradeInsertResult.data);
+          } catch (error) {
+            if (error.code === '23505') {
+              console.warn(`Duplicate record skipped: ${error.message}`);
+            } else {
+              console.error("Error upserting into trades:", error);
+            }
           }
         }
       } catch (error) {
