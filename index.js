@@ -24,7 +24,7 @@ let noConnectionInterval;
 function startCheckApiInterval() {
   if (!isWebSocketActive) {
     // Start the interval to run checkApi() every 10 seconds
-    interval = setInterval(checkApi, 5000); // Change to 10 seconds
+    interval = setInterval(checkApi, 10000); // Change to 10 seconds
     isWebSocketActive = true;
   }
 }
@@ -40,7 +40,10 @@ function stopCheckApiInterval() {
 // Function to run checkApi() every 60 seconds when there are no active connections
 function startNoConnectionInterval() {
   if (!isWebSocketActive && !noConnectionInterval) {
-    noConnectionInterval = setInterval(checkApi, 300000); // 5 minutes interval
+    noConnectionInterval = setInterval(() => {
+      console.log('No connections, running to keep data fresh.');
+      checkApi(); // Run checkApi even without connections
+    }, 300000); // 5 minutes interval
   }
 }
 
@@ -146,6 +149,8 @@ startNoConnectionInterval(); //will run once when the server starts, and it will
 
 wss.on('connection', (ws) => {
   connections.add(ws); // Add the new connection to the set
+  const clientIP = request.socket.remoteAddress;
+  console.log(`New connection from IP: ${clientIP}`);
 
   ws.on('message', (message) => {
     const messageText = message.toString();
