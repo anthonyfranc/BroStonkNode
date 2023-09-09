@@ -109,7 +109,7 @@ async function checkApi() {
           cryptoToUpsert.push(record);
 
           // Make the second API call for each asset name
-          const tradeData = await tradeHistory.getTradeHistory({ asset: record.name, maxResults: '1' });
+          const tradeData = await tradeHistory.getTradeHistory({ asset: record.name, maxResults: '10' });
 
           // Modify the tradeData object to include the 'asset' column
           tradeData.data.data.forEach((trade) => {
@@ -131,7 +131,7 @@ async function checkApi() {
             .from("crypto")
             .upsert(cryptoToUpsert, { onConflict: ["name"] })
             .select();
-          console.log("Batch upsert successful into crypto:", cryptoResult.data);
+          console.log("Batch upsert successful into crypto");
         }
 
         if (tradeDataToUpsert.length > 0) {
