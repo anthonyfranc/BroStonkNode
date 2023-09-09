@@ -44,8 +44,8 @@ function startCheckApiInterval() {
 }
 
 function stopCheckApiInterval() {
-  if (isWebSocketActive) {
-    // Stop the interval
+  if (isWebSocketActive && connections.size === 0) {
+    // Stop the interval only if WebSocket is active and no connections are present
     clearInterval(interval);
     isWebSocketActive = false;
   }
