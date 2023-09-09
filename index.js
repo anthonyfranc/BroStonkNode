@@ -41,7 +41,7 @@ function startCheckApiInterval() {
     console.log(connections.size);
     console.log('Interval has been updated to 5 seconds since the connection is active and greater than 0.');
   }
-  elseif(connections.size < 1)
+  else if(connections.size < 1)
   {
     interval = setInterval(checkApi, 30000);
     console.log(connections.size);
@@ -180,23 +180,6 @@ async function checkApi() {
     .catch((err) => console.error(err));
 }
 
-startNoConnectionInterval(); //will run once when the server starts, and it will start the interval if there are no initial connections. It will also continue to work as expected when connections are established and closed.
-
-// Function to start or stop checkApi based on WebSocket connections
-function watchConnections() {
-  if (connections.size === 0 && !isWebSocketActive) {
-    console.log('No connections, running to keep data fresh.');
-    stopCheckApiInterval(); // Stop the checkApi interval when there are no connections
-    startNoConnectionInterval(); // Start the no connection interval when there is no active connection
-    isWebSocketActive = false;
-  } else if (isWebSocketActive) {
-    console.log('WebSocket connection active, starting checkApi with 5 seconds interval.');
-    isWebSocketActive = true;
-    stopNoConnectionInterval(); // Stop the no connection interval when there is an active connection
-    startCheckApiInterval(); // Start the interval with 5 seconds duration
-  }
-}
-
 // Call startCheckApiInterval here to start it immediately when the server starts
 startCheckApiInterval();
 
@@ -209,15 +192,10 @@ wss.on('connection', (ws, request) => {
     console.log('x-forwarded-for header not found in request.');
   }
 
-  // Call watchConnections when a new connection is established
-  watchConnections();
-
   ws.on('message', (message) => {
     const messageText = message.toString();
     if (messageText === 'startFetching') {
       if (!isWebSocketActive) {
-        // Move the startCheckApiInterval call here
-        stopNoConnectionInterval(); // Stop the no connection interval when there is an active connection
         startCheckApiInterval(); // Start the interval only for the first connection
       }
     } else if (messageText.startsWith('ping:')) {
