@@ -184,9 +184,9 @@ function watchConnections() {
     console.log('No connections, running to keep data fresh.');
     checkApi(); // Run checkApi immediately when there are no connections
   } else if (isWebSocketActive) {
-    console.log('WebSocket connection active, stopping checkApi.');
+    console.log('WebSocket connection active, stopping checkApi and starting no connection interval.');
     stopCheckApiInterval(); // Stop the checkApi interval when there are active connections
-    stopNoConnectionInterval(); // Stop the no connection interval when there is an active connection
+    startNoConnectionInterval(); // Start the no connection interval when there is an active connection
   }
 }
 
