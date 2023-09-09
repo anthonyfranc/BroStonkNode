@@ -42,7 +42,7 @@ function startCheckApiInterval() {
   if (!isWebSocketActive || connections.size > 0) {
     // Start the interval with the determined duration
     interval = setInterval(checkApi, intervalDuration);
-    console.log(connections.set);
+    console.log(connections.size);
     console.log(intervalDuration);
   }
 }
