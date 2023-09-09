@@ -188,6 +188,9 @@ function watchConnections() {
   }
 }
 
+// Call startCheckApiInterval here to start it immediately when the server starts
+startCheckApiInterval();
+
 wss.on('connection', (ws, request) => {
   connections.add(ws); // Add the new connection to the set
   const clientIP = request.headers['x-forwarded-for']; // Use x-forwarded-for header
@@ -204,6 +207,7 @@ wss.on('connection', (ws, request) => {
     const messageText = message.toString();
     if (messageText === 'startFetching') {
       if (!isWebSocketActive) {
+        // Move the startCheckApiInterval call here
         startCheckApiInterval(); // Start the interval only for the first connection
         stopNoConnectionInterval(); // Stop the no connection interval when there is an active connection
       }
