@@ -36,6 +36,7 @@ function logActiveConnections() {
 }
 
 function startCheckApiInterval() {
+  console.log(connections.size);
   // Determine the interval duration based on WebSocket activity
   const intervalDuration = isWebSocketActive ? 5000 : 300000; // 5 seconds or 5 minutes
 
