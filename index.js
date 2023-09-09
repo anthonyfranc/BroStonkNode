@@ -176,6 +176,18 @@ async function checkApi() {
 
 startNoConnectionInterval(); //will run once when the server starts, and it will start the interval if there are no initial connections. It will also continue to work as expected when connections are established and closed.
 
+// Function to start or stop checkApi based on WebSocket connections
+function watchConnections() {
+  if (connections.size === 0 && !isWebSocketActive) {
+    console.log('No connections, running to keep data fresh.');
+    checkApi(); // Run checkApi immediately when there are no connections
+  } else if (isWebSocketActive) {
+    console.log('WebSocket connection active, stopping checkApi.');
+    stopCheckApiInterval(); // Stop the checkApi interval when there are active connections
+    stopNoConnectionInterval(); // Stop the no connection interval when there is an active connection
+  }
+}
+
 wss.on('connection', (ws, request) => {
   connections.add(ws); // Add the new connection to the set
   const clientIP = request.headers['x-forwarded-for']; // Use x-forwarded-for header
@@ -184,6 +196,9 @@ wss.on('connection', (ws, request) => {
   } else {
     console.log('x-forwarded-for header not found in request.');
   }
+
+  // Call watchConnections when a new connection is established
+  watchConnections();
 
   ws.on('message', (message) => {
     const messageText = message.toString();
@@ -202,12 +217,8 @@ wss.on('connection', (ws, request) => {
   ws.on('close', () => {
     connections.delete(ws); // Remove the closed connection from the set
 
-    // Check if there are still other active connections
-    if (connections.size === 0) {
-      isWebSocketActive = false; // Set WebSocket as inactive
-      stopCheckApiInterval(); // Stop the checkApi interval when there are no active connections
-      startNoConnectionInterval(); // Start the no connection interval when there are no active connections
-    }
+    // Call watchConnections when a connection is closed
+    watchConnections();
   });
 });
 
