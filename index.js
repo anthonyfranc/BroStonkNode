@@ -187,6 +187,7 @@ function watchConnections() {
     console.log('WebSocket connection active, stopping checkApi.');
     stopCheckApiInterval(); // Stop the checkApi interval when there are active connections
     stopNoConnectionInterval(); // Stop the no connection interval when there is an active connection
+    startCheckApiInterval();
   }
 }
 
