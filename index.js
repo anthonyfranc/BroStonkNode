@@ -160,7 +160,7 @@ const connections = new Set(); // Set to track WebSocket connections
 
 startNoConnectionInterval(); //will run once when the server starts, and it will start the interval if there are no initial connections. It will also continue to work as expected when connections are established and closed.
 
-wss.on('connection', (ws) => {
+wss.on('connection', (ws, request) => {
   connections.add(ws); // Add the new connection to the set
   const clientIP = request.socket.remoteAddress;
   console.log(`New connection from IP: ${clientIP}`);
