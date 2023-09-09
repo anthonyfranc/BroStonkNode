@@ -37,8 +37,8 @@ function logActiveConnections() {
 
 function startCheckApiInterval() {
   if (!isWebSocketActive) {
-    // Start the interval to run checkApi() every 10 seconds
-    interval = setInterval(checkApi, 5000); // Change to 10 seconds
+    // Start the interval to run checkApi() every 5 minutes
+    interval = setInterval(checkApi, 300000); // 5 minutes
     isWebSocketActive = true;
   }
 }
