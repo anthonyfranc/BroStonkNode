@@ -36,7 +36,7 @@ function logActiveConnections() {
 }
 
 function startCheckApiInterval() {
-  if(isWebSocketActive === true && connections.size > 0){
+  if(connections.size > 0){
     interval = setInterval(checkApi, 5000);
     console.log(connections.size);
     console.log('Interval has been updated to 5 seconds since the connection is active and greater than 0.');
