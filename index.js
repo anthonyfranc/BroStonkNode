@@ -21,6 +21,15 @@ let isWebSocketActive = false; // Flag to track WebSocket activity
 let interval;
 let noConnectionInterval;
 
+const connections = new Set(); // Set to track WebSocket connections
+
+function broadcast(message) {
+  // Send a message to all connected WebSocket clients
+  connections.forEach((ws) => {
+    ws.send(message);
+  });
+}
+
 function startCheckApiInterval() {
   if (!isWebSocketActive) {
     // Start the interval to run checkApi() every 10 seconds
@@ -155,9 +164,6 @@ async function checkApi() {
     .catch((err) => console.error(err));
 }
 
-
-const connections = new Set(); // Set to track WebSocket connections
-
 startNoConnectionInterval(); //will run once when the server starts, and it will start the interval if there are no initial connections. It will also continue to work as expected when connections are established and closed.
 
 wss.on('connection', (ws, request) => {
@@ -187,6 +193,7 @@ wss.on('connection', (ws, request) => {
     // Check if there are still other active connections
     if (connections.size === 0) {
       isWebSocketActive = false; // Set WebSocket as inactive
+      stopCheckApiInterval(); // Stop the checkApi interval when there are no active connections
       startNoConnectionInterval(); // Start the no connection interval when there are no active connections
     }
   });
