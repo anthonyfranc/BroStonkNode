@@ -162,7 +162,7 @@ startNoConnectionInterval(); //will run once when the server starts, and it will
 
 wss.on('connection', (ws, request) => {
   connections.add(ws); // Add the new connection to the set
-  const clientIP = request.socket.remoteAddress;
+  const clientIP = request.headers['cf-connecting-ip']; // Use CF-Connecting-IP header
   console.log(`New connection from IP: ${clientIP}`);
 
   ws.on('message', (message) => {
