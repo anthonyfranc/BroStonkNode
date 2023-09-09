@@ -207,9 +207,6 @@ wss.on('connection', (ws, request) => {
 
   ws.on('close', () => {
     connections.delete(ws); // Remove the closed connection from the set
-
-    // Call watchConnections when a connection is closed
-    watchConnections();
   });
 });
 
