@@ -182,11 +182,12 @@ startNoConnectionInterval(); //will run once when the server starts, and it will
 function watchConnections() {
   if (connections.size === 0 && !isWebSocketActive) {
     console.log('No connections, running to keep data fresh.');
-    checkApi(); // Run checkApi immediately when there are no connections
+    stopCheckApiInterval(); // Stop the checkApi interval when there are no connections
+    startNoConnectionInterval(); // Start the no connection interval when there is no active connection
   } else if (isWebSocketActive) {
-    console.log('WebSocket connection active, stopping checkApi and starting no connection interval.');
-    stopCheckApiInterval(); // Stop the checkApi interval when there are active connections
-    startNoConnectionInterval(); // Start the no connection interval when there is an active connection
+    console.log('WebSocket connection active, starting checkApi with 5 seconds interval.');
+    stopNoConnectionInterval(); // Stop the no connection interval when there is an active connection
+    startCheckApiInterval(); // Start the interval with 5 seconds duration
   }
 }
 
