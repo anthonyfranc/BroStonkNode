@@ -187,7 +187,6 @@ function watchConnections() {
     console.log('WebSocket connection active, stopping checkApi.');
     stopCheckApiInterval(); // Stop the checkApi interval when there are active connections
     stopNoConnectionInterval(); // Stop the no connection interval when there is an active connection
-    startCheckApiInterval();
   }
 }
 
@@ -211,8 +210,8 @@ wss.on('connection', (ws, request) => {
     if (messageText === 'startFetching') {
       if (!isWebSocketActive) {
         // Move the startCheckApiInterval call here
-        startCheckApiInterval(); // Start the interval only for the first connection
         stopNoConnectionInterval(); // Stop the no connection interval when there is an active connection
+        startCheckApiInterval(); // Start the interval only for the first connection
       }
     } else if (messageText.startsWith('ping:')) {
       const originalPingTimestamp = messageText.split(':')[1];
