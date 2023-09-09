@@ -36,15 +36,17 @@ function logActiveConnections() {
 }
 
 function startCheckApiInterval() {
-  // Determine the interval duration based on WebSocket activity
-  const intervalDuration = isWebSocketActive ? 5000 : 300000; // 5 seconds or 5 minutes
-
-  //if (!isWebSocketActive || connections.size > 0) {
-    // Start the interval with the determined duration
-    interval = setInterval(checkApi, intervalDuration);
+  if(isWebSocketActive === true && connections.size > 0){
+    interval = setInterval(checkApi, 5000);
     console.log(connections.size);
-    console.log(intervalDuration);
- // }
+    console.log('Interval has been updated to 5 seconds since the connection is active and greater than 0.');
+  }
+  else
+  {
+    interval = setInterval(checkApi, 30000);
+    console.log(connections.size);
+    console.log('Interval has been updated to 5 minutes since the connection is no longer active and the amount of connection is equal to zero.');
+  }
 }
 
 function stopCheckApiInterval() {
