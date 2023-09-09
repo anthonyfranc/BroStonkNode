@@ -40,9 +40,13 @@ function stopCheckApiInterval() {
 // Function to run checkApi() every 60 seconds when there are no active connections
 function startNoConnectionInterval() {
   if (!isWebSocketActive && !noConnectionInterval) {
+    console.log('No connections, running to keep data fresh.');
+    checkApi(); // Run checkApi immediately when there are no connections
+
+    // Then set the interval to run checkApi every 5 minutes
     noConnectionInterval = setInterval(() => {
-      console.log('No connections, running to keep data fresh.');
-      checkApi(); // Run checkApi even without connections
+      console.log('Running to keep data fresh.');
+      checkApi();
     }, 300000); // 5 minutes interval
   }
 }
