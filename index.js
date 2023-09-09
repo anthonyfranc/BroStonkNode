@@ -30,6 +30,11 @@ function broadcast(message) {
   });
 }
 
+// Function to log the number of active connections
+function logActiveConnections() {
+  console.log(`Active WebSocket connections: ${connections.size}`);
+}
+
 function startCheckApiInterval() {
   if (!isWebSocketActive) {
     // Start the interval to run checkApi() every 10 seconds
@@ -175,6 +180,8 @@ wss.on('connection', (ws, request) => {
     console.log('x-forwarded-for header not found in request.');
   }
 
+  logActiveConnections(); // Log the number of active connections
+
   ws.on('message', (message) => {
     const messageText = message.toString();
     if (messageText === 'startFetching') {
@@ -189,6 +196,8 @@ wss.on('connection', (ws, request) => {
 
   ws.on('close', () => {
     connections.delete(ws); // Remove the closed connection from the set
+
+    logActiveConnections(); // Log the number of active connections
 
     // Check if there are still other active connections
     if (connections.size === 0) {
