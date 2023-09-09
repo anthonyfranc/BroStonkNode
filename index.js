@@ -79,44 +79,35 @@ async function checkApi() {
       }
 
       try {
+        // Create an array to store records that need to be upserted into crypto_logs
+        const cryptoLogsToUpsert = [];
+
+        // Create an array to store records that need to be upserted into crypto
+        const cryptoToUpsert = [];
+
+        // Create an array to store trade data records that need to be upserted into trades
+        const tradeDataToUpsert = [];
+
+        // Initialize a cache object to store recent price data
+        const priceCache = {};
+
         for (const record of records) {
-          // Query the most recent "price" for the cryptocurrency based on the "id" column
-          const recentPriceRecord = await supabase
-            .from("crypto_logs")
-            .select("price")
-            .eq("name", record.name)
-            .order("id", { ascending: false }) // Order by 'id' in descending order
-            .limit(1)
-            .single();
+          const cachedPrice = priceCache[record.name];
 
-          if (
-            !recentPriceRecord || // If there's no recent record
-            recentPriceRecord.data === null || // If the recent record has no data
-            recentPriceRecord.data.price !== record.price // If the new price is different from the recent price
-          ) {
-            // Insert the data into the "crypto_logs" table
-            const logResult = await supabase.from("crypto_logs").upsert([record]);
-
-            if (logResult.error) {
-              console.error("Error upserting into crypto_logs:", logResult.error);
-            } else {
-              console.log("Upsert successful into crypto_logs:", logResult.data);
-            }
+          if (cachedPrice !== undefined && cachedPrice === record.price) {
+            // If the price is in the cache and matches the current price, no need to query the database
+            console.log(`No price change for ${record.name} in crypto_logs (cached).`);
           } else {
-            console.log(`No price change for ${record.name} in crypto_logs.`);
+            // Add the record to the array for upserting into crypto_logs
+            cryptoLogsToUpsert.push(record);
           }
 
-          // Insert the data into the "crypto" table regardless of changes
-          const cryptoResult = await supabase
-            .from("crypto")
-            .upsert([record], { onConflict: ["name"] })
-            .select();
+          // Update the cache with the new price, whether it was queried or not
+          priceCache[record.name] = record.price;
 
-          if (cryptoResult.error) {
-            console.error("Error upserting into crypto:", cryptoResult.error);
-          } else {
-            console.log("Upsert successful into crypto:", cryptoResult.data);
-          }
+          // Add the record to the array for upserting into crypto (regardless of changes)
+          cryptoToUpsert.push(record);
+
           // Make the second API call for each asset name
           const tradeData = await tradeHistory.getTradeHistory({ asset: record.name, maxResults: '1' });
 
@@ -125,15 +116,33 @@ async function checkApi() {
             trade.asset = record.name;
           });
 
-          // Insert the trade data into the "trades" table in Supabase
+          // Add the trade data records to the array for upserting into trades
+          tradeDataToUpsert.push(...tradeData.data.data);
+        }
+
+        // Perform batch upserts for crypto_logs, crypto, and trades
+        if (cryptoLogsToUpsert.length > 0) {
+          const logResult = await supabase.from("crypto_logs").upsert(cryptoLogsToUpsert);
+          console.log("Batch upsert successful into crypto_logs:", logResult.data);
+        }
+
+        if (cryptoToUpsert.length > 0) {
+          const cryptoResult = await supabase
+            .from("crypto")
+            .upsert(cryptoToUpsert, { onConflict: ["name"] })
+            .select();
+          console.log("Batch upsert successful into crypto:", cryptoResult.data);
+        }
+
+        if (tradeDataToUpsert.length > 0) {
           try {
             const tradeInsertResult = await supabase
               .from("trades")
-              .upsert(tradeData.data.data);
-            console.log("Upsert successful into trades:", tradeInsertResult.data);
+              .upsert(tradeDataToUpsert);
+            console.log("Batch upsert successful into trades:", tradeInsertResult.data);
           } catch (error) {
             if (error.code === '23505') {
-              console.warn(`Duplicate record skipped: ${error.message}`);
+              console.warn(`Duplicate records skipped in trades: ${error.message}`);
             } else {
               console.error("Error upserting into trades:", error);
             }
