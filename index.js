@@ -185,13 +185,13 @@ wss.on('connection', (ws, request) => {
     console.log('x-forwarded-for header not found in request.');
   }
 
-  logActiveConnections(); // Log the number of active connections
-
   ws.on('message', (message) => {
     const messageText = message.toString();
     if (messageText === 'startFetching') {
-      startCheckApiInterval(); // Start the interval only for the first connection
-      stopNoConnectionInterval(); // Stop the no connection interval when there is an active connection
+      if (!isWebSocketActive) {
+        startCheckApiInterval(); // Start the interval only for the first connection
+        stopNoConnectionInterval(); // Stop the no connection interval when there is an active connection
+      }
     } else if (messageText.startsWith('ping:')) {
       const originalPingTimestamp = messageText.split(':')[1];
       const pongTimestamp = new Date().getTime();
@@ -201,8 +201,6 @@ wss.on('connection', (ws, request) => {
 
   ws.on('close', () => {
     connections.delete(ws); // Remove the closed connection from the set
-
-    logActiveConnections(); // Log the number of active connections
 
     // Check if there are still other active connections
     if (connections.size === 0) {
