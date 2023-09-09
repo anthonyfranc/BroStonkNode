@@ -163,7 +163,11 @@ startNoConnectionInterval(); //will run once when the server starts, and it will
 wss.on('connection', (ws, request) => {
   connections.add(ws); // Add the new connection to the set
   const clientIP = request.headers['cf-connecting-ip']; // Use CF-Connecting-IP header
-  console.log(`New connection from IP: ${clientIP}`);
+  if (clientIP) {
+    console.log(`New connection from IP: ${clientIP}`);
+  } else {
+    console.log('CF-Connecting-IP header not found in request.');
+  }
 
   ws.on('message', (message) => {
     const messageText = message.toString();
