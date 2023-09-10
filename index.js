@@ -189,6 +189,7 @@ startCheckApiInterval();
 
 wss.on('connection', (ws, request) => {
   connections.add(ws); // Add the new connection to the set
+  startCheckApiInterval();
   const clientIP = request.headers['x-forwarded-for']; // Use x-forwarded-for header
   if (clientIP) {
     console.log(`New connection from IP: ${clientIP}`);
