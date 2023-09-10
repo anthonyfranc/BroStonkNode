@@ -39,7 +39,6 @@ function startCheckApiInterval() {
   interval = setInterval(checkApi, 300000);
   if(connections.size > 0){
     clearInterval(interval);
-    checkApi(); //run this initially.
     interval = setInterval(checkApi, 5000);
     console.log(connections.size);
     console.log('Interval has been updated to 5 seconds since the connection is active and greater than 0.');
@@ -47,7 +46,6 @@ function startCheckApiInterval() {
   else if(connections.size === 0)
   {
     clearInterval(interval);
-    checkApi(); //run this initially.
     interval = setInterval(checkApi, 300000);
     console.log(connections.size);
     console.log('Interval has been updated to 5 minutes since the connection is no longer active and the amount of connection is equal to zero.');
@@ -85,7 +83,7 @@ function stopNoConnectionInterval() {
   clearInterval(noConnectionInterval);
 }
 
-async function checkApi() {
+function checkApi() {
   marketData
     .multiData({ assets: "bitcoin,litecoin,ethereum,tether,dogecoin,xrp,bnb,polygon,solana" })
     .then(async (response) => {
