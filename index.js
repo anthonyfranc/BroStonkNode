@@ -6,6 +6,16 @@ const server = http.createServer(); // Use HTTP server
 
 const wss = new WebSocket.Server({ server, path: '/index-ws' });
 
+const { createClient } = require("@supabase/supabase-js");
+
+const supabaseUrl = "https://jjtqvxvprcmblezstaks.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqdHF2eHZwcmNtYmxlenN0YWtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTE3NjAxMjAsImV4cCI6MjAwNzMzNjEyMH0.glxbp12RNVsu6TaSqPGH_CUDs9AH7T1jNkfwLtz3ZQI";
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+const apiToken = "227cbd70-db72-4532-a285-bfaf74481af5";
+const marketData = require("api")("@mobula-api/v1.0#4cpc4om4lkxxs6mc");
+const tradeHistory = require("api")("@mobula-api/v1.0#1y6qv6aclmauztal");
+
 server.on('request', (req, res) => {
   // Bot detection middleware
   if (botd.detect(req)) {
@@ -15,15 +25,6 @@ server.on('request', (req, res) => {
     res.writeHead(403, { 'Content-Type': 'text/plain' });
     res.end('Bot access forbidden.');
   } else {
-    const { createClient } = require("@supabase/supabase-js");
-
-    const supabaseUrl = "https://jjtqvxvprcmblezstaks.supabase.co";
-    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqdHF2eHZwcmNtYmxlenN0YWtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTE3NjAxMjAsImV4cCI6MjAwNzMzNjEyMH0.glxbp12RNVsu6TaSqPGH_CUDs9AH7T1jNkfwLtz3ZQI";
-    const supabase = createClient(supabaseUrl, supabaseKey);
-    
-    const apiToken = "227cbd70-db72-4532-a285-bfaf74481af5";
-    const marketData = require("api")("@mobula-api/v1.0#4cpc4om4lkxxs6mc");
-    const tradeHistory = require("api")("@mobula-api/v1.0#1y6qv6aclmauztal");
     
     marketData.auth(apiToken);
     tradeHistory.auth(apiToken);
