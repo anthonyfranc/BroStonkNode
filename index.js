@@ -42,7 +42,7 @@ function startCheckApiInterval() {
     console.log(connections.size);
     console.log('Interval has been updated to 5 seconds since the connection is active and greater than 0.');
   }
-  else if(connections.size < 1)
+  else if(connections.size === 0)
   {
     checkApi(); //run this initially.
     interval = setInterval(checkApi, 300000);
