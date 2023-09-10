@@ -1,6 +1,9 @@
 const http = require('http');
 const WebSocket = require('ws');
-const server = http.createServer();
+const botd = require('botd'); // Add bot detection library
+
+const server = http.createServer(); // Use HTTP server
+
 const wss = new WebSocket.Server({ server, path: '/index-ws' });
 
 const { createClient } = require("@supabase/supabase-js");
