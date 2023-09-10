@@ -1,13 +1,9 @@
 const http = require('http');
 const WebSocket = require('ws');
-const botd = require('botd'); // Add bot detection library
-
 const server = http.createServer(); // Use HTTP server
-
 const wss = new WebSocket.Server({ server, path: '/index-ws' });
 
 const { createClient } = require("@supabase/supabase-js");
-
 const supabaseUrl = "https://jjtqvxvprcmblezstaks.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqdHF2eHZwcmNtYmxlenN0YWtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTE3NjAxMjAsImV4cCI6MjAwNzMzNjEyMH0.glxbp12RNVsu6TaSqPGH_CUDs9AH7T1jNkfwLtz3ZQI";
 const supabase = createClient(supabaseUrl, supabaseKey);
