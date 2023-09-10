@@ -36,6 +36,7 @@ function logActiveConnections() {
 }
 
 function startCheckApiInterval() {
+  interval = setInterval(checkApi, 300000);
   if(connections.size > 0){
     checkApi(); //run this initially.
     interval = setInterval(checkApi, 5000);
