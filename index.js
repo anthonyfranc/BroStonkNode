@@ -172,7 +172,7 @@ clearInterval(interval);
 }
 
 if (connections.size > 0) {
-interval = setInterval(checkApi, 5000);
+interval = setInterval(checkApi, 1000);
 console.log('Interval has been updated to 5 seconds since the connection is active and greater than 0.');
 } else {
 interval = setInterval(checkApi, 300000);
