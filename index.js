@@ -29,7 +29,7 @@ function broadcast(message) {
     ws.send(message);
   });
 }
-function checkApi() {
+async function checkApi() {
   marketData
     .multiData({ assets: "bitcoin,litecoin,ethereum,tether,dogecoin,xrp,bnb,polygon,solana" })
     .then(async (response) => {
