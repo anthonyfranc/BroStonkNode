@@ -190,6 +190,7 @@ wss.on('connection', (ws, request) => {
   }
 
   ws.on('message', (message) => {
+    broadcast('Connection open'); // Notify all clients that the connection has closed
     const messageText = message.toString();
     if (messageText === 'startFetching') {
       if (connections.size > 0 && connections.size < 2) {
