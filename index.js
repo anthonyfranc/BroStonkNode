@@ -131,14 +131,14 @@ function checkApi() {
 
 function startCheckApiInterval() {
 if (interval) {
-clearInterval(interval);
+clearTimeout(interval);
 }
 
 if (connections.size > 0) {
-interval = setInterval(checkApi, 1000);
+interval = setTimeout(checkApi, 1000);
 console.log('Interval has been updated to 5 seconds since the connection is active and greater than 0.');
 } else {
-interval = setInterval(checkApi, 300000);
+interval = setTimeout(checkApi, 300000);
 console.log('Interval has been updated to 5 minutes since the connection is no longer active and the amount of connection is equal to zero.');
 }
 }
