@@ -27,29 +27,41 @@ function broadcast(message) {
     ws.send(message);
   });
 }
-async function checkApi() {
-  marketData
-    .multiData({ assets: "bitcoin,litecoin,ethereum,tether,dogecoin,xrp,bnb,polygon,solana" })
-    .then(async (response) => {
-      const cryptocurrencies = response.data.data;
-      const records = [];
 
-      for (const [name, cryptoData] of Object.entries(cryptocurrencies)) {
-        const record = {
-          name: name,
-          market_cap: cryptoData.market_cap,
-          liquidity: cryptoData.liquidity,
-          price: cryptoData.price,
-          volume: cryptoData.volume,
-          volume_7d: cryptoData.volume_7d,
-          is_listed: cryptoData.is_listed,
-          price_change_24h: cryptoData.price_change_24h,
-          updated_at: new Date().toISOString(),
-        };
+let isApiRunning = false; // Flag to track whether checkApi is already running
 
-        records.push(record);
-      }
+async function checkApi() {  
+marketData
+  .auth(apiToken)
+  .multiData({ assets: "bitcoin,litecoin,ethereum,tether,dogecoin,xrp,bnb,polygon,solana" })
+  .then(async (response) => {
+    // Check if the API is already running, and if so, exit the function
+    if (isApiRunning) {
+      console.log('API is already running, skipping this execution.');
+      return;
+    }
 
+    isApiRunning = true; // Set the flag to indicate that checkApi is running
+
+    const cryptocurrencies = response.data.data;
+    const records = [];
+
+    for (const [name, cryptoData] of Object.entries(cryptocurrencies)) {
+      const record = {
+        name: name,
+        market_cap: cryptoData.market_cap,
+        liquidity: cryptoData.liquidity,
+        price: cryptoData.price,
+        volume: cryptoData.volume,
+        volume_7d: cryptoData.volume_7d,
+        is_listed: cryptoData.is_listed,
+        price_change_24h: cryptoData.price_change_24h,
+        updated_at: new Date().toISOString(),
+      };
+
+      records.push(record);
+    }
+    
       try {
         // Create an array to store records that need to be upserted into crypto_logs
         const cryptoLogsToUpsert = [];
@@ -81,7 +93,7 @@ async function checkApi() {
           cryptoToUpsert.push(record);
 
           // Make the second API call for each asset name
-          const tradeData = await tradeHistory.getTradeHistory({ asset: record.name, maxResults: '1' });
+          const tradeData = await tradeHistory.auth(apiToken).getTradeHistory({ asset: record.name, maxResults: '1' });
 
           // Modify the tradeData object to include the 'asset' column
           tradeData.data.data.forEach((trade) => {
@@ -120,8 +132,11 @@ async function checkApi() {
             }
           }
         }
+    // After processing, reset the flag to allow the next execution
+    isApiRunning = false;
       } catch (error) {
         console.error("Error upserting:", error);
+        isApiRunning = false; // Ensure the flag is reset even in case of an error
       }
     })
     .catch((err) => console.error(err));
