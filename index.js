@@ -18,7 +18,6 @@ tradeHistory.auth(apiToken);
 
 
 let isWebSocketActive = false; // Flag to track WebSocket activity
-let interval;
 let noConnectionInterval;
 
 const connections = new Set(); // Set to track WebSocket connections
@@ -129,12 +128,12 @@ async function checkApi() {
     .catch((err) => console.error(err));
 }
 
-let isIntervalActive = false; // Flag to track whether the interval is active
+let interval;
 
 function startCheckApiInterval() {
   if (interval) {
     clearInterval(interval);
-    isIntervalActive = false;
+    interval = undefined;
   }
 
   // Run checkApi immediately before setting the timer
@@ -144,13 +143,11 @@ function startCheckApiInterval() {
     interval = setInterval(() => {
       checkApi();
     }, 1000); // Run every second
-    isIntervalActive = true;
     console.log('Interval has been updated to 1 second since there is an active connection.');
   } else {
-    interval = setInterval(() => {
-      checkApi();
-    }, 300000); // Run every 5 minutes
-    isIntervalActive = false;
+    interval = setTimeout(() => {
+      checkApiInterval();
+    }, 300000); // Run after 5 minutes if there are no active connections
     console.log('Interval has been updated to 5 minutes since there are no active connections.');
   }
 }
@@ -168,7 +165,7 @@ wss.on('connection', (ws, request) => {
     broadcast('Connection open'); // Notify all clients that the connection has closed
     const messageText = message.toString();
     if (messageText === 'startFetching') {
-      if (connections.size > 0 && !isIntervalActive) {
+      if (connections.size > 0 && !interval) {
         startCheckApiInterval(); // Start the interval only if there was no active interval
       }
     } else if (messageText.startsWith('ping:')) {
@@ -181,14 +178,13 @@ wss.on('connection', (ws, request) => {
   ws.on('close', () => {
     connections.delete(ws); // Remove the closed connection from the set
     broadcast('Connection closed'); // Notify all clients that the connection has closed
-    if (connections.size === 0 && isIntervalActive) {
-      clearInterval(interval); // Stop the interval if there are no active connections
-      isIntervalActive = false;
+    if (connections.size === 0 && interval) {
+      clearTimeout(interval); // Stop the timeout if there are no active connections
+      interval = undefined;
       console.log('Interval has been stopped since there are no active connections.');
     }
   });
 });
-
 
 const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
