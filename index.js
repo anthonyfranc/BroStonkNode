@@ -12,10 +12,6 @@ const apiToken = "227cbd70-db72-4532-a285-bfaf74481af5";
 const marketData = require("api")("@mobula-api/v1.0#4cpc4om4lkxxs6mc");
 const tradeHistory = require("api")("@mobula-api/v1.0#1y6qv6aclmauztal");
 
-marketData.auth(apiToken);
-tradeHistory.auth(apiToken);
-
-
 let isWebSocketActive = false; // Flag to track WebSocket activity
 let noConnectionInterval;
 
@@ -31,8 +27,10 @@ function broadcast(message) {
 let isApiRunning = false; // Flag to track whether checkApi is already running
 
 async function checkApi() {  
+marketData.auth(apiToken);
+tradeHistory.auth(apiToken);
+  
 marketData
-  .auth(apiToken)
   .multiData({ assets: "bitcoin,litecoin,ethereum,tether,dogecoin,xrp,bnb,polygon,solana" })
   .then(async (response) => {
     // Check if the API is already running, and if so, exit the function
@@ -93,7 +91,7 @@ marketData
           cryptoToUpsert.push(record);
 
           // Make the second API call for each asset name
-          const tradeData = await tradeHistory.auth(apiToken).getTradeHistory({ asset: record.name, maxResults: '1' });
+          const tradeData = await tradeHistory.getTradeHistory({ asset: record.name, maxResults: '1' });
 
           // Modify the tradeData object to include the 'asset' column
           tradeData.data.data.forEach((trade) => {
