@@ -129,18 +129,30 @@ function checkApi() {
     .catch((err) => console.error(err));
 }
 
-function startCheckApiInterval() {
-if (interval) {
-clearTimeout(interval);
-}
+let isIntervalActive = false; // Flag to track whether the interval is active
 
-if (connections.size > 0) {
-interval = setTimeout(checkApi, 1000);
-console.log('Interval has been updated to 5 seconds since the connection is active and greater than 0.');
-} else {
-interval = setTimeout(checkApi, 300000);
-console.log('Interval has been updated to 5 minutes since the connection is no longer active and the amount of connection is equal to zero.');
-}
+function startCheckApiInterval() {
+  if (interval) {
+    clearInterval(interval);
+    isIntervalActive = false;
+  }
+
+  // Run checkApi immediately before setting the timer
+  checkApi();
+
+  if (connections.size > 0) {
+    interval = setInterval(() => {
+      checkApi();
+    }, 1000); // Run every second
+    isIntervalActive = true;
+    console.log('Interval has been updated to 1 second since there is an active connection.');
+  } else {
+    interval = setInterval(() => {
+      checkApi();
+    }, 300000); // Run every 5 minutes
+    isIntervalActive = false;
+    console.log('Interval has been updated to 5 minutes since there are no active connections.');
+  }
 }
 
 wss.on('connection', (ws, request) => {
@@ -156,8 +168,8 @@ wss.on('connection', (ws, request) => {
     broadcast('Connection open'); // Notify all clients that the connection has closed
     const messageText = message.toString();
     if (messageText === 'startFetching') {
-      if (connections.size > 0 && connections.size < 2) {
-        startCheckApiInterval(); // Start the interval only for the first connection
+      if (connections.size > 0 && !isIntervalActive) {
+        startCheckApiInterval(); // Start the interval only if there was no active interval
       }
     } else if (messageText.startsWith('ping:')) {
       const originalPingTimestamp = messageText.split(':')[1];
@@ -167,13 +179,15 @@ wss.on('connection', (ws, request) => {
   });
 
   ws.on('close', () => {
-  connections.delete(ws); // Remove the closed connection from the set
-  broadcast('Connection closed'); // Notify all clients that the connection has closed
-  startCheckApiInterval(); // Start the interval if the number of connections goes back to 0
+    connections.delete(ws); // Remove the closed connection from the set
+    broadcast('Connection closed'); // Notify all clients that the connection has closed
+    if (connections.size === 0 && isIntervalActive) {
+      clearInterval(interval); // Stop the interval if there are no active connections
+      isIntervalActive = false;
+      console.log('Interval has been stopped since there are no active connections.');
+    }
   });
 });
-
-startCheckApiInterval();
 
 
 const PORT = process.env.PORT || 4000;
