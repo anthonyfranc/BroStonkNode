@@ -149,22 +149,22 @@ function startCheckApiInterval() {
   }
 }
 
-
 wss.on('connection', (ws, request) => {
-  connections.add(ws); // Add the new connection to the set
-  const clientIP = request.headers['x-forwarded-for']; // Use x-forwarded-for header
+  connections.add(ws);
+  const clientIP = request.headers['x-forwarded-for'];
   if (clientIP) {
     console.log(`New connection from IP: ${clientIP}`);
+    startCheckApiInterval(); // Start or update the interval when a new connection is established
   } else {
     console.log('x-forwarded-for header not found in request.');
   }
 
   ws.on('message', (message) => {
-    broadcast('Connection open'); // Notify all clients that the connection has closed
+    broadcast('Connection open');
     const messageText = message.toString();
     if (messageText === 'startFetching') {
-      if (connections.size > 0 && !interval) {
-        startCheckApiInterval(); // Start the interval only if there was no active interval
+      if (connections.size > 0 && connections.size < 2) {
+        startCheckApiInterval();
       }
     } else if (messageText.startsWith('ping:')) {
       const originalPingTimestamp = messageText.split(':')[1];
@@ -174,12 +174,10 @@ wss.on('connection', (ws, request) => {
   });
 
   ws.on('close', () => {
-    connections.delete(ws); // Remove the closed connection from the set
-    broadcast('Connection closed'); // Notify all clients that the connection has closed
-    if (connections.size === 0 && interval) {
-      clearTimeout(interval); // Stop the timeout if there are no active connections
-      interval = undefined;
-      console.log('Interval has been stopped since there are no active connections.');
+    connections.delete(ws);
+    broadcast('Connection closed');
+    if (connections.size === 0) {
+      startCheckApiInterval(); // Start or update the interval when a connection is closed and there are no connections left
     }
   });
 });
