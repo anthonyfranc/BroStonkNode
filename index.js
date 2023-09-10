@@ -187,7 +187,6 @@ startCheckApiInterval();
 
 wss.on('connection', (ws, request) => {
   connections.add(ws); // Add the new connection to the set
-  startCheckApiInterval();
   const clientIP = request.headers['x-forwarded-for']; // Use x-forwarded-for header
   if (clientIP) {
     console.log(`New connection from IP: ${clientIP}`);
@@ -198,7 +197,7 @@ wss.on('connection', (ws, request) => {
   ws.on('message', (message) => {
     const messageText = message.toString();
     if (messageText === 'startFetching') {
-      if (!isWebSocketActive) {
+      if (connections.size > 0 && connections.size < 2) {
         startCheckApiInterval(); // Start the interval only for the first connection
       }
     } else if (messageText.startsWith('ping:')) {
