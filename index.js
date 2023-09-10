@@ -136,21 +136,19 @@ function startCheckApiInterval() {
     interval = undefined;
   }
 
-  // Run checkApi immediately before setting the timer
-  checkApi();
-
   if (connections.size > 0) {
     interval = setInterval(() => {
       checkApi();
-    }, 1000); // Run every second
+    }, 1000); // Run every second when there is an active connection
     console.log('Interval has been updated to 1 second since there is an active connection.');
   } else {
-    interval = setTimeout(() => {
-      checkApiInterval();
-    }, 300000); // Run after 5 minutes if there are no active connections
+    interval = setInterval(() => {
+      checkApi();
+    }, 300000); // Run every 5 minutes when there are no active connections
     console.log('Interval has been updated to 5 minutes since there are no active connections.');
   }
 }
+
 
 wss.on('connection', (ws, request) => {
   connections.add(ws); // Add the new connection to the set
