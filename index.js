@@ -138,13 +138,19 @@ function startCheckApiInterval() {
   if (connections.size > 0) {
     interval = setInterval(() => {
       checkApi();
-    }, 3000); // Run every second when there is an active connection
-    console.log('Interval has been updated to 1 second since there is an active connection.');
+    }, 3000);
+    console.log('Interval has been updated to 3 seconds since there is an active connection.');
+
+    // Call checkApi immediately after setting the new interval
+    checkApi();
   } else {
     interval = setInterval(() => {
       checkApi();
-    }, 300000); // Run every 5 minutes when there are no active connections
+    }, 300000);
     console.log('Interval has been updated to 5 minutes since there are no active connections.');
+
+    // Call checkApi immediately after setting the new interval
+    checkApi();
   }
 }
 
