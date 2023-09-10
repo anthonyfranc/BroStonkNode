@@ -1,5 +1,3 @@
-import { setInterval } from 'timers';
-
 const http = require('http');
 const WebSocket = require('ws');
 const server = http.createServer();
@@ -31,43 +29,6 @@ function broadcast(message) {
     ws.send(message);
   });
 }
-
-// Function to log the number of active connections
-function logActiveConnections() {
-  console.log(`Active WebSocket connections: ${connections.size}`);
-}
-
-function stopCheckApiInterval() {
-  if (isWebSocketActive && connections.size === 0) {
-    // Stop the interval only if WebSocket is active and no connections are present
-    clearInterval(interval);
-    isWebSocketActive = false;
-  }
-}
-
-// Function to run checkApi() every 60 seconds when there are no active connections
-function startNoConnectionInterval() {
-  if (!isWebSocketActive && !noConnectionInterval) {
-    console.log('No connections, running to keep data fresh.');
-    checkApi(); // Run checkApi immediately when there are no connections
-
-    // Then set the interval to run checkApi every 5 minutes
-    noConnectionInterval = setInterval(() => {
-      if (!isWebSocketActive) {
-        console.log('Running to keep data fresh.');
-        checkApi();
-      } else {
-        console.log('WebSocket connection active, stopping no connection interval.');
-        stopNoConnectionInterval(); // Stop the interval when WebSocket connection is active
-      }
-    }, 300000); // 5 minutes interval
-  }
-}
-
-function stopNoConnectionInterval() {
-  clearInterval(noConnectionInterval);
-}
-
 function checkApi() {
   marketData
     .multiData({ assets: "bitcoin,litecoin,ethereum,tether,dogecoin,xrp,bnb,polygon,solana" })
