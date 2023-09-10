@@ -203,8 +203,9 @@ wss.on('connection', (ws, request) => {
   });
 
   ws.on('close', () => {
-    connections.delete(ws); // Remove the closed connection from the set
-    startCheckApiInterval();
+  connections.delete(ws); // Remove the closed connection from the set
+  broadcast('Connection closed'); // Notify all clients that the connection has closed
+  startCheckApiInterval(); // Start the interval if the number of connections goes back to 0
   });
 });
 
