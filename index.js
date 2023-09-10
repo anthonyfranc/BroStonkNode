@@ -35,23 +35,6 @@ function logActiveConnections() {
   console.log(`Active WebSocket connections: ${connections.size}`);
 }
 
-function startCheckApiInterval() {
-  interval = setInterval(checkApi, 300000);
-  if(connections.size > 0){
-    clearInterval(interval);
-    interval = setInterval(checkApi, 5000);
-    console.log(connections.size);
-    console.log('Interval has been updated to 5 seconds since the connection is active and greater than 0.');
-  }
-  else if(connections.size === 0)
-  {
-    clearInterval(interval);
-    interval = setInterval(checkApi, 300000);
-    console.log(connections.size);
-    console.log('Interval has been updated to 5 minutes since the connection is no longer active and the amount of connection is equal to zero.');
-  }
-}
-
 function stopCheckApiInterval() {
   if (isWebSocketActive && connections.size === 0) {
     // Stop the interval only if WebSocket is active and no connections are present
@@ -183,8 +166,13 @@ function checkApi() {
     .catch((err) => console.error(err));
 }
 
-// Call startCheckApiInterval here to start it immediately when the server starts
-startCheckApiInterval();
+function startCheckApiInterval() {
+  if (connections.size > 0) {
+    interval = setInterval(checkApi, 5000);
+  } else {
+    interval = setInterval(checkApi, 300000);
+  }
+}
 
 wss.on('connection', (ws, request) => {
   connections.add(ws); // Add the new connection to the set
@@ -213,6 +201,8 @@ wss.on('connection', (ws, request) => {
     startCheckApiInterval();
   });
 });
+
+startCheckApiInterval();
 
 
 const PORT = process.env.PORT || 4000;
