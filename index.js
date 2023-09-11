@@ -139,7 +139,6 @@ async function checkApi() {
     // Ensure the flag is reset even in case of an error
     isApiRunning = false;
   }
-})
     .catch((err) => console.error(err));
 }
 
