@@ -140,13 +140,11 @@ async function checkApi() {
   }
 } catch (err) {
     console.error(err);
-  }
-      // Ensure the flag is reset even in case of an error
+  } finally {
+    // Ensure the flag is reset even in case of an error
     isApiRunning = false;
+  }
 }
-
-// Add this line to close the checkApi function properly
-checkApi().catch((err) => console.error(err));
 
 let interval;
 
