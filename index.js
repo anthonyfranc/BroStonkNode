@@ -141,10 +141,10 @@ async function checkApi() {
     isApiRunning = false;
   }
 }
+}
 
 // Add this line to close the checkApi function properly
 checkApi().catch((err) => console.error(err));
-}
 
 let interval;
 
