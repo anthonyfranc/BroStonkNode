@@ -134,12 +134,16 @@ async function checkApi() {
         }
 } catch (error) {
     console.error("Error upserting:", error);
+            // Ensure the flag is reset even in case of an error
+    isApiRunning = false;
   } finally {
     // Ensure the flag is reset even in case of an error
     isApiRunning = false;
   }
 } catch (err) {
     console.error(err);
+        // Ensure the flag is reset even in case of an error
+    isApiRunning = false;
   } finally {
     // Ensure the flag is reset even in case of an error
     isApiRunning = false;
