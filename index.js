@@ -132,15 +132,15 @@ async function checkApi() {
             }
           }
         }
-    // After processing, reset the flag to allow the next execution
-    isApiRunning = false;
-        } catch (error) {
+  // Your existing code for processing and upserting data...
+  } catch (error) {
     console.error("Error upserting:", error);
-    } finally {
-      // Ensure the flag is reset even in case of an error
-      isApiRunning = false;
-    }
+  } finally {
+    // Ensure the flag is reset even in case of an error
+    isApiRunning = false;
   }
+})
+    .catch((err) => console.error(err));
 }
 
 let interval;
