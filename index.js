@@ -24,18 +24,7 @@ function broadcast(message) {
   });
 }
 
-let isApiRunning = false; // Flag to track whether checkApi is already running
-
 async function checkApi() {
-  // Check if the API is already running, and if so, exit the function
-  if (isApiRunning) {
-    console.log('API is already running, skipping this execution.');
-    return;
-  }
-
-  // Set the flag to true at the beginning
-  isApiRunning = true;
-
   try {
     // Your API authentication logic
     marketData.auth(apiToken);
@@ -134,20 +123,10 @@ async function checkApi() {
         }
 } catch (error) {
     console.error("Error upserting:", error);
-            // Ensure the flag is reset even in case of an error
-    isApiRunning = false;
-  } finally {
-    // Ensure the flag is reset even in case of an error
-    isApiRunning = false;
-  }
+  } 
 } catch (err) {
     console.error(err);
-        // Ensure the flag is reset even in case of an error
-    isApiRunning = false;
-  } finally {
-    // Ensure the flag is reset even in case of an error
-    isApiRunning = false;
-  }
+  } 
 }
 
 let interval;
