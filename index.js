@@ -26,21 +26,23 @@ function broadcast(message) {
 
 let isApiRunning = false; // Flag to track whether checkApi is already running
 
-async function checkApi() {  
-marketData.auth(apiToken);
-tradeHistory.auth(apiToken);
-  
-marketData
-  .multiData({ assets: "bitcoin,litecoin,ethereum,tether,dogecoin,xrp,bnb,polygon,solana" })
-  .then(async (response) => {
-    // Check if the API is already running, and if so, exit the function
-    if (isApiRunning) {
-      console.log('API is already running, skipping this execution.');
-      return;
-    }
+async function checkApi() {
+  // Check if the API is already running, and if so, exit the function
+  if (isApiRunning) {
+    console.log('API is already running, skipping this execution.');
+    return;
+  }
 
-    isApiRunning = true; // Set the flag to indicate that checkApi is running
+  // Set the flag to true at the beginning
+  isApiRunning = true;
 
+  try {
+    // Your API authentication logic
+    marketData.auth(apiToken);
+    tradeHistory.auth(apiToken);
+
+    // Fetch data from the marketData API
+    const response = await marketData.multiData({ assets: "bitcoin,litecoin,ethereum,tether,dogecoin,xrp,bnb,polygon,solana" });
     const cryptocurrencies = response.data.data;
     const records = [];
 
@@ -132,12 +134,13 @@ marketData
         }
     // After processing, reset the flag to allow the next execution
     isApiRunning = false;
-      } catch (error) {
-        console.error("Error upserting:", error);
-        isApiRunning = false; // Ensure the flag is reset even in case of an error
-      }
-    })
-    .catch((err) => console.error(err));
+        } catch (error) {
+    console.error("Error upserting:", error);
+    } finally {
+      // Ensure the flag is reset even in case of an error
+      isApiRunning = false;
+    }
+  }
 }
 
 let interval;
