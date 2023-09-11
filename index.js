@@ -133,13 +133,14 @@ async function checkApi() {
           }
         }
   // Your existing code for processing and upserting data...
+
   } catch (error) {
     console.error("Error upserting:", error);
   } finally {
     // Ensure the flag is reset even in case of an error
     isApiRunning = false;
   }
-    .catch((err) => console.error(err));
+}).catch((err) => console.error(err));
 }
 
 let interval;
