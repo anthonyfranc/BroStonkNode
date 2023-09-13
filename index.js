@@ -30,22 +30,31 @@ function broadcast(message) {
 }
 
 async function processTradeData(record) {
+    // Fetch all available trade data, not just the latest
     const tradeData = await tradeHistory.getTradeHistory({
         asset: record.name,
-        maxResults: '25' // Fetch all available data
+        maxResults: 'all' // Fetch all available data
     });
 
     // Modify the tradeData object to include the 'asset' column
-    tradeData.data.data.forEach((trade) => {
+    tradeData.data.data.forEach(async (trade) => {
         trade.asset = record.name;
 
         // Check if the trade record already exists in the database based on the unique identifier
         const tradeRecordIdentifier = `${trade.date}-${trade.hash}-${trade.value_usd}-${trade.token_amount}-${trade.token_price}-${trade.type}-${trade.blockchain}`;
 
         // Check if the record already exists in the database
-        const existingRecord = supabase.from("trades").select().eq("hash", tradeRecordIdentifier);
+        const { data: existingRecords, error } = await supabase
+            .from("trades")
+            .select()
+            .eq("hash_iq", tradeRecordIdentifier);
 
-        if (!existingRecord) {
+        if (error) {
+            console.error("Error querying existing records:", error);
+            return;
+        }
+
+        if (!existingRecords || existingRecords.length === 0) {
             // If the record doesn't exist in the database, add it to the deduplicatedTradeData array
             deduplicatedTradeData.push(trade);
         } else {
