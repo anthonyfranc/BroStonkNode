@@ -117,10 +117,10 @@ async function checkApi() {
             records.push(record);
 
             // Add the record to the array for upserting into crypto_logs (cryptoLogsToUpsert)
-            cryptoLogsToUpsert.push(record);
+            cryptoLogsToUpsert.push(records);
 
             // Add the record to the array for upserting into crypto (cryptoToUpsert)
-            cryptoToUpsert.push(record);
+            cryptoToUpsert.push(records);
         }
 
        // Process trade data asynchronously using Promise.all
