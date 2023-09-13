@@ -114,23 +114,6 @@ async function checkApi() {
         // Process trade data asynchronously using Promise.all
         await Promise.all(records.map(processTradeData));
 
-        // Deduplicate tradeDataToUpsert
-        const uniqueTradeData = new Set();
-        const deduplicatedTradeData = [];
-        const conflictingTradeData = []; // To capture conflicting trade data
-
-        for (const tradeRecord of tradeDataToUpsert) {
-            const tradeRecordIdentifier = `${tradeRecord.date}-${tradeRecord.hash}-${tradeRecord.value_usd}-${tradeRecord.token_amount}-${tradeRecord.token_price}-${tradeRecord.type}-${tradeRecord.blockchain}`;
-            if (!uniqueTradeData.has(tradeRecordIdentifier)) {
-                uniqueTradeData.add(tradeRecordIdentifier);
-                deduplicatedTradeData.push(tradeRecord);
-            } else {
-                // Log the conflicting trade data
-                console.log("Conflicting trade record:", tradeRecord);
-                conflictingTradeData.push(tradeRecord);
-            }
-        }
-
         // Log the conflicting trade data
         console.log("Conflicting trade records:", conflictingTradeData);
 
@@ -150,24 +133,6 @@ async function checkApi() {
             console.log("Batch upsert successful into crypto");
         }
 
-        if (deduplicatedTradeData.length > 0) { // Use the deduplicated data
-            try {
-                const {
-                    data,
-                    error
-                } = await supabase
-                    .from("trades")
-                    .upsert(deduplicatedTradeData) // Use the deduplicated data
-                    .select();
-                console.log("Batch upsert successful into trades:", error);
-            } catch (error) {
-                if (error.code === '23505') {
-                    console.warn(`Duplicate records skipped in trades: ${error.message}`);
-                } else {
-                    console.error("Error upserting into trades:", error);
-                }
-            }
-        }
     } catch (error) {
         console.error("Error upserting:", error);
     }
