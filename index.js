@@ -30,6 +30,10 @@ function broadcast(message) {
 }
 
 async function processTradeData(record) {
+        if (record === null) {
+        console.error("Received null record in processTradeData.");
+        return;
+    }
     // Fetch all available trade data, not just the latest
     const tradeData = await tradeHistory.getTradeHistory({
         asset: record.name,
@@ -70,7 +74,7 @@ async function processTradeData(record) {
                     console.log("Inserted trade record:", insertedRecords[0]);
                 }
             } else {
-                console.log(`Duplicate record skipped: ${tradeRecordIdentifier}`);
+                console.warn(`Duplicate record skipped: ${tradeRecordIdentifier}`);
             }
         }
 
