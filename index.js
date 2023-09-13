@@ -34,6 +34,7 @@ async function checkApi() {
         // Your API authentication logic
         marketData.auth(apiToken);
         tradeHistory.auth(apiToken);
+
         // Clear the arrays at the beginning of each run
         const cryptoLogsToUpsert = [];
         const cryptoToUpsert = [];
@@ -60,127 +61,92 @@ async function checkApi() {
             };
 
             records.push(record);
-        }
 
-        try {
-            // Create an array to store records that need to be upserted into crypto_logs
-            const cryptoLogsToUpsert = [];
+            // Fetch all available trade data, not just the latest
+            const tradeData = await tradeHistory.getTradeHistory({
+                asset: record.name,
+                maxResults: 'all' // Fetch all available data
+            });
 
-            // Create an array to store records that need to be upserted into crypto
-            const cryptoToUpsert = [];
+            // Modify the tradeData object to include the 'asset' column
+            tradeData.data.data.forEach((trade) => {
+                trade.asset = record.name;
 
-            // Create an array to store trade data records that need to be upserted into trades
-            const tradeDataToUpsert = [];
+                // Check if the trade record already exists in the database based on the unique identifier
+                const tradeRecordIdentifier = `${trade.date}-${trade.hash}-${trade.value_usd}-${trade.token_amount}-${trade.token_price}-${trade.type}-${trade.blockchain}`;
 
-            // Initialize a cache object to store recent price data
-            const priceCache = {};
+                // Check if the record already exists in the database
+                const existingRecord = await supabase.from("trades").select().eq("hash", tradeRecordIdentifier);
 
-            for (const record of records) {
-                const cachedPrice = priceCache[record.name];
-
-                if (cachedPrice !== undefined && cachedPrice === record.price) {
-                    // If the price is in the cache and matches the current price, no need to query the database
-                    console.log(`No price change for ${record.name} in crypto_logs (cached).`);
+                if (!existingRecord) {
+                    // If the record doesn't exist in the database, add it to the deduplicatedTradeData array
+                    deduplicatedTradeData.push(trade);
                 } else {
-                    // Add the record to the array for upserting into crypto_logs
-                    cryptoLogsToUpsert.push(record);
+                    // Log that a duplicate record was found
+                    console.log(`Duplicate record skipped: ${tradeRecordIdentifier}`);
                 }
+            });
 
-                // Update the cache with the new price, whether it was queried or not
-                priceCache[record.name] = record.price;
-
-                // Add the record to the array for upserting into crypto (regardless of changes)
-                cryptoToUpsert.push(record);
-
-               // Fetch all available trade data, not just the latest
-const tradeData = await tradeHistory.getTradeHistory({
-    asset: record.name,
-    maxResults: 'all' // Fetch all available data
-});
-
-                // Modify the tradeData object to include the 'asset' column
-tradeData.data.data.forEach((trade) => {
-    trade.asset = record.name;
-    
-    // Check if the trade record already exists in the database based on the unique identifier
-    const tradeRecordIdentifier = `${trade.date}-${trade.hash}-${trade.value_usd}-${trade.token_amount}-${trade.token_price}-${trade.type}-${trade.blockchain}`;
-    
-    // Check if the record already exists in the database
-    const existingRecord = await supabase.from("trades").select().eq("hash", tradeRecordIdentifier);
-    
-    if (!existingRecord) {
-        // If the record doesn't exist in the database, add it to the deduplicatedTradeData array
-        deduplicatedTradeData.push(trade);
-    } else {
-        // Log that a duplicate record was found
-        console.log(`Duplicate record skipped: ${tradeRecordIdentifier}`);
-    }
-});
-
-                // Add the trade data records to the array for upserting into trades
-                tradeDataToUpsert.push(...tradeData.data.data);
-            }
-
-// Deduplicate tradeDataToUpsert
-const uniqueTradeData = new Set();
-const deduplicatedTradeData = [];
-const conflictingTradeData = []; // To capture conflicting trade data
-
-for (const tradeRecord of tradeDataToUpsert) {
-    const tradeRecordIdentifier = `${tradeRecord.date}-${tradeRecord.hash}-${tradeRecord.value_usd}-${tradeRecord.token_amount}-${tradeRecord.token_price}-${tradeRecord.type}-${tradeRecord.blockchain}`;
-    if (!uniqueTradeData.has(tradeRecordIdentifier)) {
-        uniqueTradeData.add(tradeRecordIdentifier);
-        deduplicatedTradeData.push(tradeRecord);
-    } else {
-        // Log the conflicting trade data
-        console.log("Conflicting trade record:", tradeRecord);
-        conflictingTradeData.push(tradeRecord);
-    }
-}
-
-// Log the conflicting trade data
-console.log("Conflicting trade records:", conflictingTradeData);
-
-
-            // Perform batch upserts for crypto_logs, crypto, and trades
-            if (cryptoLogsToUpsert.length > 0) {
-                const logResult = await supabase.from("crypto_logs").upsert(cryptoLogsToUpsert);
-                console.log("Batch upsert successful into crypto_logs:", logResult.data);
-            }
-
-            if (cryptoToUpsert.length > 0) {
-                const cryptoResult = await supabase
-                    .from("crypto")
-                    .upsert(cryptoToUpsert, {
-                        onConflict: ["name"]
-                    })
-                    .select();
-                console.log("Batch upsert successful into crypto");
-            }
-
-            if (deduplicatedTradeData.length > 0) { // Use the deduplicated data
-                try {
-                    const {
-                        data,
-                        error
-                    } = await supabase
-                        .from("trades")
-                        .upsert(deduplicatedTradeData) // Use the deduplicated data
-                        .select();
-                    console.log("Batch upsert successful into trades:", error);
-                } catch (error) {
-                    if (error.code === '23505') {
-                        console.warn(`Duplicate records skipped in trades: ${error.message}`);
-                    } else {
-                        console.error("Error upserting into trades:", error);
-                    }
-                }
-            }
-        } catch (error) {
-            console.error("Error upserting:", error);
+            // Add the trade data records to the array for upserting into trades
+            tradeDataToUpsert.push(...tradeData.data.data);
         }
-    } catch (err) {
-        console.error(err);
+
+        // Deduplicate tradeDataToUpsert
+        const uniqueTradeData = new Set();
+        const deduplicatedTradeData = [];
+        const conflictingTradeData = []; // To capture conflicting trade data
+
+        for (const tradeRecord of tradeDataToUpsert) {
+            const tradeRecordIdentifier = `${tradeRecord.date}-${tradeRecord.hash}-${tradeRecord.value_usd}-${tradeRecord.token_amount}-${tradeRecord.token_price}-${tradeRecord.type}-${tradeRecord.blockchain}`;
+            if (!uniqueTradeData.has(tradeRecordIdentifier)) {
+                uniqueTradeData.add(tradeRecordIdentifier);
+                deduplicatedTradeData.push(tradeRecord);
+            } else {
+                // Log the conflicting trade data
+                console.log("Conflicting trade record:", tradeRecord);
+                conflictingTradeData.push(tradeRecord);
+            }
+        }
+
+        // Log the conflicting trade data
+        console.log("Conflicting trade records:", conflictingTradeData);
+
+        // Perform batch upserts for crypto_logs, crypto, and trades
+        if (cryptoLogsToUpsert.length > 0) {
+            const logResult = await supabase.from("crypto_logs").upsert(cryptoLogsToUpsert);
+            console.log("Batch upsert successful into crypto_logs:", logResult.data);
+        }
+
+        if (cryptoToUpsert.length > 0) {
+            const cryptoResult = await supabase
+                .from("crypto")
+                .upsert(cryptoToUpsert, {
+                    onConflict: ["name"]
+                })
+                .select();
+            console.log("Batch upsert successful into crypto");
+        }
+
+        if (deduplicatedTradeData.length > 0) { // Use the deduplicated data
+            try {
+                const {
+                    data,
+                    error
+                } = await supabase
+                    .from("trades")
+                    .upsert(deduplicatedTradeData) // Use the deduplicated data
+                    .select();
+                console.log("Batch upsert successful into trades:", error);
+            } catch (error) {
+                if (error.code === '23505') {
+                    console.warn(`Duplicate records skipped in trades: ${error.message}`);
+                } else {
+                    console.error("Error upserting into trades:", error);
+                }
+            }
+        }
+    } catch (error) {
+        console.error("Error upserting:", error);
     }
 }
 
