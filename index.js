@@ -34,7 +34,6 @@ async function checkApi() {
         // Your API authentication logic
         marketData.auth(apiToken);
         tradeHistory.auth(apiToken);
-
         // Clear the arrays at the beginning of each run
         const cryptoLogsToUpsert = [];
         const cryptoToUpsert = [];
