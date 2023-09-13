@@ -110,7 +110,7 @@ async function checkApi() {
         if (tradeDataToUpsert.length > 0) {
           try {
             const {data, error} = await supabase
-              .from("trades")
+              .from("crypto_trades")
               .upsert(tradeDataToUpsert)
               .select();
             console.log("Batch upsert successful into trades:", error);
