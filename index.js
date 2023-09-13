@@ -122,11 +122,7 @@ async function checkApi() {
             cryptoToUpsert.push(record);
         }
 
-        // Print the contents of the arrays to check if data is correctly populated
-        console.log("cryptoLogsToUpsert:", cryptoLogsToUpsert);
-        console.log("cryptoToUpsert:", cryptoToUpsert);
-
-        // Process trade data asynchronously using Promise.all
+       // Process trade data asynchronously using Promise.all
         await Promise.all(records.map(processTradeData));
 
         // Perform batch upserts for crypto_logs, crypto, and trades
