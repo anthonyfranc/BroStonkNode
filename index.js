@@ -103,16 +103,26 @@ async function checkApi() {
                 tradeDataToUpsert.push(...tradeData.data.data);
             }
 
-            // Deduplicate tradeDataToUpsert
-            const uniqueTradeData = new Set();
-            const deduplicatedTradeData = [];
-            for (const tradeRecord of tradeDataToUpsert) {
-                const tradeRecordIdentifier = `${tradeRecord.date}-${tradeRecord.hash}-${tradeRecord.value_usd}-${tradeRecord.token_amount}-${tradeRecord.token_price}-${tradeRecord.type}-${tradeRecord.blockchain}`;
-                if (!uniqueTradeData.has(tradeRecordIdentifier)) {
-                    uniqueTradeData.add(tradeRecordIdentifier);
-                    deduplicatedTradeData.push(tradeRecord);
-                }
-            }
+// Deduplicate tradeDataToUpsert
+const uniqueTradeData = new Set();
+const deduplicatedTradeData = [];
+const conflictingTradeData = []; // To capture conflicting trade data
+
+for (const tradeRecord of tradeDataToUpsert) {
+    const tradeRecordIdentifier = `${tradeRecord.date}-${tradeRecord.hash}-${tradeRecord.value_usd}-${tradeRecord.token_amount}-${tradeRecord.token_price}-${tradeRecord.type}-${tradeRecord.blockchain}`;
+    if (!uniqueTradeData.has(tradeRecordIdentifier)) {
+        uniqueTradeData.add(tradeRecordIdentifier);
+        deduplicatedTradeData.push(tradeRecord);
+    } else {
+        // Log the conflicting trade data
+        console.log("Conflicting trade record:", tradeRecord);
+        conflictingTradeData.push(tradeRecord);
+    }
+}
+
+// Log the conflicting trade data
+console.log("Conflicting trade records:", conflictingTradeData);
+
 
             // Perform batch upserts for crypto_logs, crypto, and trades
             if (cryptoLogsToUpsert.length > 0) {
