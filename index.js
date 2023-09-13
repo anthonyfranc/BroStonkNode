@@ -136,13 +136,13 @@ async function checkApi() {
         }
 
         if (cryptoToUpsert.length > 0) {
-            const cryptoResult = await supabase
+            const {data, error} = await supabase
                 .from("crypto")
                 .upsert(cryptoToUpsert, {
                     onConflict: ["name"]
                 })
                 .select();
-            console.log("Batch upsert successful into crypto");
+            console.log("Crypto Upsert", error);
         }
 
     } catch (error) {
