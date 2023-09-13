@@ -36,36 +36,38 @@ async function processTradeData(record) {
         maxResults: 'all' // Fetch all available data
     });
 
-    // Modify the tradeData object to include the 'asset' column
-    tradeData.data.data.forEach(async (trade) => {
-        trade.asset = record.name;
+    const batchSize = 25; // Set an appropriate batch size
+    let startIndex = 0;
 
-        // Check if the trade record already exists in the database based on the unique identifier
-        const tradeRecordIdentifier = `${trade.date}-${trade.hash}-${trade.value_usd}-${trade.token_amount}-${trade.token_price}-${trade.type}-${trade.blockchain}`;
+    while (startIndex < tradeData.data.data.length) {
+        const batch = tradeData.data.data.slice(startIndex, startIndex + batchSize);
 
-        // Add the tradeRecordIdentifier to the "hash_iq" column
-        trade.hash_iq = tradeRecordIdentifier;
+        for (const trade of batch) {
+            trade.asset = record.name;
 
-        // Check if the record already exists in the database based on "hash_iq"
-        const { data: existingRecords, error } = await supabase
-            .from("trades")
-            .select()
-            .eq("hash_iq", trade.hash_iq)
-            .single(); // Use .single() to ensure you get a single record
+            const tradeRecordIdentifier = `${trade.date}-${trade.hash}-${trade.value_usd}-${trade.token_amount}-${trade.token_price}-${trade.type}-${trade.blockchain}`;
+            trade.hash_iq = tradeRecordIdentifier;
 
-        if (error) {
-            console.error("Error querying existing records:", error);
-            return;
+            const { data: existingRecords, error } = await supabase
+                .from("trades")
+                .select()
+                .eq("hash_iq", trade.hash_iq)
+                .single();
+
+            if (error) {
+                console.error("Error querying existing records:", error);
+                return;
+            }
+
+            if (!existingRecords) {
+                deduplicatedTradeData.push(trade);
+            } else {
+                console.log(`Duplicate record skipped: ${tradeRecordIdentifier}`);
+            }
         }
 
-        if (!existingRecords) {
-            // If the record doesn't exist in the database, add it to the deduplicatedTradeData array
-            deduplicatedTradeData.push(trade);
-        } else {
-            // Log that a duplicate record was found
-            console.log(`Duplicate record skipped: ${tradeRecordIdentifier}`);
-        }
-    });
+        startIndex += batchSize;
+    }
 }
 
 async function checkApi() {
