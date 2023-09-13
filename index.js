@@ -32,7 +32,7 @@ function broadcast(message) {
 async function processTradeData(record) {
     const tradeData = await tradeHistory.getTradeHistory({
         asset: record.name,
-        maxResults: 'all' // Fetch all available data
+        maxResults: '25' // Fetch all available data
     });
 
     // Modify the tradeData object to include the 'asset' column
