@@ -91,7 +91,7 @@ async function checkApi() {
                 // Make the second API call for each asset name
                 const tradeData = await tradeHistory.getTradeHistory({
                     asset: record.name,
-                    maxResults: '15'
+                    maxResults: '1'
                 });
 
                 // Modify the tradeData object to include the 'asset' column
@@ -113,8 +113,6 @@ async function checkApi() {
                     deduplicatedTradeData.push(tradeRecord);
                 }
             }
-
-
 
             // Perform batch upserts for crypto_logs, crypto, and trades
             if (cryptoLogsToUpsert.length > 0) {
