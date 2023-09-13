@@ -93,10 +93,7 @@ async function checkApi() {
         const response = await marketData.multiData({
             assets: "bitcoin,litecoin,ethereum,tether,dogecoin,xrp,bnb,polygon,solana"
         });
-        
-        // Print the response to check if data is retrieved successfully
-        console.log("MarketData API Response:", response);
-
+    
         const cryptocurrencies = response.data.data;
         const records = [];
 
