@@ -95,7 +95,7 @@ async function checkApi() {
                 // Make the second API call for each asset name
                 const tradeData = await tradeHistory.getTradeHistory({
                     asset: record.name,
-                    maxResults: '1'
+                    maxResults: '25'
                 });
 
                 // Modify the tradeData object to include the 'asset' column
