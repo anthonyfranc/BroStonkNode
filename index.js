@@ -117,14 +117,11 @@ async function checkApi() {
             records.push(record);
 
             // Add the record to the array for upserting into crypto_logs (cryptoLogsToUpsert)
-            cryptoLogsToUpsert.push(records);
+            cryptoLogsToUpsert.push(record);
 
             // Add the record to the array for upserting into crypto (cryptoToUpsert)
-            cryptoToUpsert.push(records);
+            cryptoToUpsert.push(record);
         }
-
-       // Process trade data asynchronously using Promise.all
-        await Promise.all(records.map(processTradeData));
 
         // Perform batch upserts for crypto_logs, crypto, and trades
         if (cryptoLogsToUpsert.length > 0) {
@@ -141,7 +138,10 @@ async function checkApi() {
                 .select();
             console.log("Crypto Upsert", error);
         }
-
+        
+       // Process trade data asynchronously using Promise.all
+        await Promise.all(records.map(processTradeData));
+        
     } catch (error) {
         console.error("Error upserting:", error);
     }
