@@ -42,29 +42,39 @@ async function processTradeData(record) {
     while (startIndex < tradeData.data.data.length) {
         const batch = tradeData.data.data.slice(startIndex, startIndex + batchSize);
 
-        for (const trade of batch) {
-            trade.asset = record.name;
+for (const trade of batch) {
+    trade.asset = record.name;
 
-            const tradeRecordIdentifier = `${trade.date}-${trade.hash}-${trade.value_usd}-${trade.token_amount}-${trade.token_price}-${trade.type}-${trade.blockchain}`;
-            trade.hash_iq = tradeRecordIdentifier;
+    const tradeRecordIdentifier = `${trade.date}-${trade.hash}-${trade.value_usd}-${trade.token_amount}-${trade.token_price}-${trade.type}-${trade.blockchain}`;
+    trade.hash_iq = tradeRecordIdentifier;
 
-            const { data: existingRecords, error } = await supabase
-                .from("trades")
-                .select()
-                .eq("hash_iq", trade.hash_iq)
-                .single();
+    const { data: existingRecords, error } = await supabase
+        .from("trades")
+        .select()
+        .eq("hash_iq", trade.hash_iq)
+        .single();
 
-            if (error) {
-                console.error("Error querying existing records:", error);
-                return;
-            }
+    if (error) {
+        console.error("Error querying existing records:", error);
+        return;
+    }
 
-            if (!existingRecords) {
-                deduplicatedTradeData.push(trade);
-            } else {
-                console.log(`Duplicate record skipped: ${tradeRecordIdentifier}`);
-            }
+    if (!existingRecords) {
+        // Insert the trade record into the "trades" table
+        const { data: insertedRecord, error: insertError } = await supabase
+            .from("trades")
+            .upsert([trade], { onConflict: ["hash_iq"], ignoreDuplicates: true })
+            .single();
+
+        if (insertError) {
+            console.error("Error inserting trade record:", insertError);
+        } else {
+            console.log("Inserted trade record:", insertedRecord);
         }
+    } else {
+        console.log(`Duplicate record skipped: ${tradeRecordIdentifier}`);
+    }
+}
 
         startIndex += batchSize;
     }
