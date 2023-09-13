@@ -33,7 +33,7 @@ async function processTradeData(record) {
     // Fetch all available trade data, not just the latest
     const tradeData = await tradeHistory.getTradeHistory({
         asset: record.name,
-        maxResults: '1' // Fetch all available data
+        maxResults: '2' // Fetch all available data
     });
 
     const batchSize = 25; // Set an appropriate batch size
