@@ -34,6 +34,10 @@ async function checkApi() {
         // Your API authentication logic
         marketData.auth(apiToken);
         tradeHistory.auth(apiToken);
+        // Clear the arrays at the beginning of each run
+        const cryptoLogsToUpsert = [];
+        const cryptoToUpsert = [];
+        const tradeDataToUpsert = [];
 
         // Fetch data from the marketData API
         const response = await marketData.multiData({
@@ -195,13 +199,6 @@ function startCheckApiInterval() {
 
 wss.on('connection', (ws, request) => {
     connections.add(ws);
-    const clientIP = request.headers['x-forwarded-for'];
-    if (clientIP) {
-        console.log(`New connection from IP: ${clientIP}`);
-        startCheckApiInterval(); // Start or update the interval when a new connection is established
-    } else {
-        console.log('x-forwarded-for header not found in request.');
-    }
 
     ws.on('message', (message) => {
         broadcast('Connection open');
