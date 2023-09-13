@@ -29,6 +29,32 @@ function broadcast(message) {
     });
 }
 
+async function processTradeData(record) {
+    const tradeData = await tradeHistory.getTradeHistory({
+        asset: record.name,
+        maxResults: 'all' // Fetch all available data
+    });
+
+    // Modify the tradeData object to include the 'asset' column
+    tradeData.data.data.forEach((trade) => {
+        trade.asset = record.name;
+
+        // Check if the trade record already exists in the database based on the unique identifier
+        const tradeRecordIdentifier = `${trade.date}-${trade.hash}-${trade.value_usd}-${trade.token_amount}-${trade.token_price}-${trade.type}-${trade.blockchain}`;
+
+        // Check if the record already exists in the database
+        const existingRecord = await supabase.from("trades").select().eq("hash", tradeRecordIdentifier);
+
+        if (!existingRecord) {
+            // If the record doesn't exist in the database, add it to the deduplicatedTradeData array
+            deduplicatedTradeData.push(trade);
+        } else {
+            // Log that a duplicate record was found
+            console.log(`Duplicate record skipped: ${tradeRecordIdentifier}`);
+        }
+    });
+}
+
 async function checkApi() {
     try {
         // Your API authentication logic
@@ -61,33 +87,8 @@ async function checkApi() {
 
             records.push(record);
 
-            // Fetch all available trade data, not just the latest
-            const tradeData = await tradeHistory.getTradeHistory({
-                asset: record.name,
-                maxResults: 'all' // Fetch all available data
-            });
-
-            // Modify the tradeData object to include the 'asset' column
-            tradeData.data.data.forEach((trade) => {
-                trade.asset = record.name;
-
-                // Check if the trade record already exists in the database based on the unique identifier
-                const tradeRecordIdentifier = `${trade.date}-${trade.hash}-${trade.value_usd}-${trade.token_amount}-${trade.token_price}-${trade.type}-${trade.blockchain}`;
-
-                // Check if the record already exists in the database
-                const existingRecord = await supabase.from("trades").select().eq("hash", tradeRecordIdentifier);
-
-                if (!existingRecord) {
-                    // If the record doesn't exist in the database, add it to the deduplicatedTradeData array
-                    deduplicatedTradeData.push(trade);
-                } else {
-                    // Log that a duplicate record was found
-                    console.log(`Duplicate record skipped: ${tradeRecordIdentifier}`);
-                }
-            });
-
-            // Add the trade data records to the array for upserting into trades
-            tradeDataToUpsert.push(...tradeData.data.data);
+            // Process trade data asynchronously
+            await processTradeData(record);
         }
 
         // Deduplicate tradeDataToUpsert
