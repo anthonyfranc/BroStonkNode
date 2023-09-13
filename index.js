@@ -114,8 +114,23 @@ async function checkApi() {
         // Process trade data asynchronously using Promise.all
         await Promise.all(records.map(processTradeData));
 
-        // Log the conflicting trade data
-        console.log("Conflicting trade records:", conflictingTradeData);
+        for (const record of records) {
+          const cachedPrice = priceCache[record.name];
+
+          if (cachedPrice !== undefined && cachedPrice === record.price) {
+            // If the price is in the cache and matches the current price, no need to query the database
+            console.log(`No price change for ${record.name} in crypto_logs (cached).`);
+          } else {
+            // Add the record to the array for upserting into crypto_logs
+            cryptoLogsToUpsert.push(record);
+          }
+
+          // Update the cache with the new price, whether it was queried or not
+          priceCache[record.name] = record.price;
+
+          // Add the record to the array for upserting into crypto (regardless of changes)
+          cryptoToUpsert.push(record);
+        }
 
         // Perform batch upserts for crypto_logs, crypto, and trades
         if (cryptoLogsToUpsert.length > 0) {
