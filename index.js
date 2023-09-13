@@ -109,11 +109,11 @@ async function checkApi() {
 
         if (tradeDataToUpsert.length > 0) {
           try {
-            const tradeInsertResult = await supabase
+            const {data, error} = await supabase
               .from("trades")
               .insert([tradeDataToUpsert])
               .select()
-            console.log("Batch upsert successful into trades");
+            console.log("Batch upsert successful into trades:", error);
           } catch (error) {
             if (error.code === '23505') {
               console.warn(`Duplicate records skipped in trades: ${error.message}`);
