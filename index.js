@@ -92,16 +92,30 @@ async function checkApi() {
                 // Add the record to the array for upserting into crypto (regardless of changes)
                 cryptoToUpsert.push(record);
 
-                // Make the second API call for each asset name
-                const tradeData = await tradeHistory.getTradeHistory({
-                    asset: record.name,
-                    maxResults: '25'
-                });
+               // Fetch all available trade data, not just the latest
+const tradeData = await tradeHistory.getTradeHistory({
+    asset: record.name,
+    maxResults: 'all' // Fetch all available data
+});
 
                 // Modify the tradeData object to include the 'asset' column
-                tradeData.data.data.forEach((trade) => {
-                    trade.asset = record.name;
-                });
+tradeData.data.data.forEach((trade) => {
+    trade.asset = record.name;
+    
+    // Check if the trade record already exists in the database based on the unique identifier
+    const tradeRecordIdentifier = `${trade.date}-${trade.hash}-${trade.value_usd}-${trade.token_amount}-${trade.token_price}-${trade.type}-${trade.blockchain}`;
+    
+    // Check if the record already exists in the database
+    const existingRecord = await supabase.from("trades").select().eq("hash", tradeRecordIdentifier);
+    
+    if (!existingRecord) {
+        // If the record doesn't exist in the database, add it to the deduplicatedTradeData array
+        deduplicatedTradeData.push(trade);
+    } else {
+        // Log that a duplicate record was found
+        console.log(`Duplicate record skipped: ${tradeRecordIdentifier}`);
+    }
+});
 
                 // Add the trade data records to the array for upserting into trades
                 tradeDataToUpsert.push(...tradeData.data.data);
