@@ -43,7 +43,7 @@ async function processTradeData(record) {
         const tradeRecordIdentifier = `${trade.date}-${trade.hash}-${trade.value_usd}-${trade.token_amount}-${trade.token_price}-${trade.type}-${trade.blockchain}`;
 
         // Check if the record already exists in the database
-        const existingRecord = await supabase.from("trades").select().eq("hash", tradeRecordIdentifier);
+        const {existingRecord} = await supabase.from("trades").select().eq("hash", tradeRecordIdentifier);
 
         if (!existingRecord) {
             // If the record doesn't exist in the database, add it to the deduplicatedTradeData array
