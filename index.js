@@ -111,7 +111,7 @@ async function checkApi() {
           try {
             const {data, error} = await supabase
               .from("trades")
-              .insert([tradeDataToUpsert])
+              .insert(tradeDataToUpsert)
               .select()
             console.log("Batch upsert successful into trades:", error);
           } catch (error) {
