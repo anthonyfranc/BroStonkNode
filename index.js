@@ -82,7 +82,7 @@ async function checkApi() {
           cryptoToUpsert.push(record);
 
           // Make the second API call for each asset name
-          const tradeData = await tradeHistory.getTradeHistory({ asset: record.name, maxResults: '1' });
+          const tradeData = await tradeHistory.getTradeHistory({ asset: record.name, maxResults: '10' });
 
           // Modify the tradeData object to include the 'asset' column
           tradeData.data.data.forEach((trade) => {
