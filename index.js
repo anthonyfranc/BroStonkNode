@@ -92,6 +92,19 @@ async function checkApi() {
           // Add the trade data records to the array for upserting into trades
           tradeDataToUpsert.push(...tradeData.data.data);
         }
+        
+        // Deduplicate tradeDataToUpsert
+const uniqueTradeData = new Set();
+const deduplicatedTradeData = [];
+for (const tradeRecord of tradeDataToUpsert) {
+  const tradeRecordIdentifier = `${tradeRecord.date}-${tradeRecord.hash}-${tradeRecord.value_usd}-${tradeRecord.token_amount}-${tradeRecord.token_price}-${tradeRecord.type}-${tradeRecord.blockchain}`;
+  if (!uniqueTradeData.has(tradeRecordIdentifier)) {
+    uniqueTradeData.add(tradeRecordIdentifier);
+    deduplicatedTradeData.push(tradeRecord);
+  }
+}
+        
+
 
         // Perform batch upserts for crypto_logs, crypto, and trades
         if (cryptoLogsToUpsert.length > 0) {
@@ -107,21 +120,21 @@ async function checkApi() {
           console.log("Batch upsert successful into crypto");
         }
 
-        if (tradeDataToUpsert.length > 0) {
-          try {
-            const {data, error} = await supabase
-              .from("crypto_trades")
-              .upsert(tradeDataToUpsert)
-              .select();
-            console.log("Batch upsert successful into trades:", error);
-          } catch (error) {
-            if (error.code === '23505') {
-              console.warn(`Duplicate records skipped in trades: ${error.message}`);
-            } else {
-              console.error("Error upserting into trades:", error);
-            }
-          }
-        }
+if (deduplicatedTradeData.length > 0) { // Use the deduplicated data
+  try {
+    const { data, error } = await supabase
+      .from("trades")
+      .upsert(deduplicatedTradeData) // Use the deduplicated data
+      .select();
+    console.log("Batch upsert successful into trades:", error);
+  } catch (error) {
+    if (error.code === '23505') {
+      console.warn(`Duplicate records skipped in trades: ${error.message}`);
+    } else {
+      console.error("Error upserting into trades:", error);
+    }
+  }
+}
 } catch (error) {
     console.error("Error upserting:", error);
   } 
