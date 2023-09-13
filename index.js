@@ -83,6 +83,7 @@ async function checkApi() {
         // Your API authentication logic
         marketData.auth(apiToken);
         tradeHistory.auth(apiToken);
+
         // Clear the arrays at the beginning of each run
         const cryptoLogsToUpsert = [];
         const cryptoToUpsert = [];
@@ -92,6 +93,10 @@ async function checkApi() {
         const response = await marketData.multiData({
             assets: "bitcoin,litecoin,ethereum,tether,dogecoin,xrp,bnb,polygon,solana"
         });
+        
+        // Print the response to check if data is retrieved successfully
+        console.log("MarketData API Response:", response);
+
         const cryptocurrencies = response.data.data;
         const records = [];
 
@@ -116,6 +121,10 @@ async function checkApi() {
             // Add the record to the array for upserting into crypto (cryptoToUpsert)
             cryptoToUpsert.push(record);
         }
+
+        // Print the contents of the arrays to check if data is correctly populated
+        console.log("cryptoLogsToUpsert:", cryptoLogsToUpsert);
+        console.log("cryptoToUpsert:", cryptoToUpsert);
 
         // Process trade data asynchronously using Promise.all
         await Promise.all(records.map(processTradeData));
