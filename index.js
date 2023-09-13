@@ -113,7 +113,7 @@ async function checkApi() {
               .from("trades")
               .insert([tradeDataToUpsert])
               .select()
-            console.log("Batch upsert successful into trades:", tradeDataToUpsert);
+            console.log("Batch upsert successful into trades");
           } catch (error) {
             if (error.code === '23505') {
               console.warn(`Duplicate records skipped in trades: ${error.message}`);
