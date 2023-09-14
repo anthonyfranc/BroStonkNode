@@ -95,7 +95,7 @@ async function checkApi() {
 
         // Fetch data from the marketData API
         const response = await marketData.multiData({
-            assets: "bitcoin,litecoin,ethereum,tether,dogecoin,xrp,bnb,polygon,solana"
+            assets: "bitcoin,litecoin,ethereum,tether,dogecoin,xrp,bnb,polygon,solana,tron,chainlink"
         });
     
         const cryptocurrencies = response.data.data;
