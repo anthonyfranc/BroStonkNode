@@ -135,7 +135,6 @@ async function checkApi() {
                 .upsert(cryptoToUpsert, {
                     onConflict: ["name"]
                 })
-                .select();
             console.log("Crypto Upsert", error);
         }
         
